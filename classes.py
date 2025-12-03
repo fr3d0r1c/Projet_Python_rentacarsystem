@@ -1,6 +1,15 @@
+#!/usr/bin/python3
+
+# --------------------------------------------------
+# Importations
+# --------------------------------------------------
+
 from datetime import datetime
 
-# --- MOCKS (A supprimer) ---
+# --------------------------------------------------
+# MOCKS (A supprimer - juste pour les tests)
+# --------------------------------------------------
+
 class VehicleMock:
     def __init__(self, brand, model, daily_rate):
         self.brand = brand
@@ -15,7 +24,10 @@ class CustomerMock:
     def __init__(self, name):
         self.name = name
 
-# --- RENTAL ---
+# --------------------------------------------------
+# RENTAL
+# --------------------------------------------------
+
 class Rental:
     def __init__(self, customer, vehicle, start_date_str, end_date_str):
         self.customer = customer
@@ -29,7 +41,6 @@ class Rental:
         self._validate_rental()
 
     def _validate_rental(self):
-        # ... (le reste du code de la méthode) ...
+        # reste du code
         pass 
 
-    # ... (Copie ici toutes les autres méthodes : confirm_rental, return_vehicle, etc.)
