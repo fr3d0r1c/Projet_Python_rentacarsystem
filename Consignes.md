@@ -46,3 +46,6 @@ Cette application doit permettre à une agence de location de :
 - UML de calsses
 - README
 - Tests unitaires
+
+draw.io integration
+fast api
