@@ -1,0 +1,63 @@
+[
+    {
+        "type": "Car",
+        "id": 1,
+        "daily_rate": 45.0,
+        "status": "Disponible",
+        "brand": "Renault",
+        "model": "Clio 5",
+        "license_plate": "FR-001-AA",
+        "door_count": 5,
+        "has_ac": true
+    },
+    {
+        "type": "Truck",
+        "id": 2,
+        "daily_rate": 250.0,
+        "status": "Disponible",
+        "cargo_volume": 40.0,
+        "max_weight": 20.0
+    },
+    {
+        "type": "Motorcycle",
+        "id": 3,
+        "daily_rate": 90.0,
+        "status": "Disponible",
+        "engine_displacement": 1200,
+        "has_top_case": false
+    },
+    {
+        "type": "Hearse",
+        "id": 4,
+        "daily_rate": 300.0,
+        "status": "Disponible",
+        "max_coffin_length": 2.5,
+        "has_refrigeration": true
+    },
+    {
+        "type": "GoKart",
+        "id": 5,
+        "daily_rate": 25.0,
+        "status": "Disponible",
+        "engine_type": "4 Temps Honda",
+        "is_indoor": false
+    },
+    null,
+    {
+        "type": "Donkey",
+        "id": 7,
+        "daily_rate": 30.0,
+        "status": "Disponible",
+        "pack_capacity_kg": 60.0,
+        "is_stubborn": true
+    },
+    {
+        "type": "Camel",
+        "id": 8,
+        "daily_rate": 80.0,
+        "status": "Disponible",
+        "hump_count": 2,
+        "water_reserve": 150.0
+    },
+    null
+]

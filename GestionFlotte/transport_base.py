@@ -18,6 +18,14 @@ class TransportMode(ABC):
     def show_details(self):
         pass
 
+    def to_dict(self):
+        return {
+            "type": self.__class__.__name__,
+            "id": self.id,
+            "daily_rate": self.daily_rate,
+            "status": self.status.value,
+        }
+
 class MotorizedVehicle(TransportMode):
     def __init__(self, t_id, daily_rate, brand, model, license_plate):
         super().__init__(t_id, daily_rate)
