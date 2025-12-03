@@ -33,7 +33,7 @@ Cette application doit permettre à une agence de location de :
 
 - Gestion : véhicules, clients, locations, recherche, rapports
 
-## Rapport
+## Rapport (Clémence)
 
 - Véhicules disponibles
 - Locations en cours
