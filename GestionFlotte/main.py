@@ -11,14 +11,21 @@ def main():
 
         if choix == '1':
             ui.list_fleet(my_fleet)
+
         elif choix == '2':
             ui.add_vehicle_menu(my_fleet)
+
         elif choix == '3':
-            ui.delete_vehicle_menu(my_fleet)
+            ui.modify_vehicle_menu(my_fleet)
+
         elif choix == '4':
+            ui.delete_vehicle_menu(my_fleet)
+
+        elif choix == '5':
             storage.save_fleet(my_fleet)
             print("👋 Au revoir !")
             break
+        
         else:
             print("❌ Commande inconnue.")
 

@@ -1,6 +1,7 @@
 from datetime import date
 from vehicles import Car, Truck, Motorcycle, Hearse, GoKart, Carriage
 from animals import Horse, Donkey, Camel
+from enums import VehicleStatus
 
 def ask_int(message):
     while True:
@@ -22,12 +23,13 @@ def ask_bool(message):
 
 def show_main_menu():
     print("\n" + "="*30)
-    print("   GESTION DE FLOTTE v2.0")
+    print("   GESTION DE FLOTTE")
     print("="*30)
     print("1. 📋 Voir la flotte")
     print("2. ➕ Ajouter un véhicule")
-    print("3. 🗑️ Supprimer un véhicule")
-    print("4. 💾 Sauvegarder et Quitter")
+    print("3. 🔧 Modifier un véhicule")
+    print("4. 🗑️ Supprimer un véhicule")
+    print("5. 💾 Sauvegarder et Quitter")
 
 def list_fleet(fleet):
     if not fleet:
@@ -72,3 +74,58 @@ def delete_vehicle_menu(fleet):
         print("🗑️ Supprimé.")
     else:
         print("Annulé ou introuvable.")
+
+def modify_vehicle_menu(fleet):
+    print("\n--- MODIFIER UN VÉHICULE ---")
+    target_id = ask_int("Entrez l'ID du véhicule à modifier : ")
+
+    found = None
+    for v in fleet:
+        if v.id == target_id:
+            found = v
+            break
+
+    if not found:
+        print("❌ Véhicule introuvable.")
+        return
+    
+    print(f"\nVéhicule sélectionné : {found.show_details()}")
+    print(f"Tarif actuel : {found.daily_rate}€ | Statut : {found.status.value}")
+
+    print("\nQue voulez-vous modifier ?")
+    print("1. Le Tarif journalier")
+    print("2. Le Statut (État)")
+    print("0. Annuler")
+
+    choix = input("Votre choix : ")
+
+    if choix == '1':
+        new_rate = ask_float("Nouveau tarif (€) : ")
+        found.daily_rate = new_rate
+        print("✅ Tarif mis à jour.")
+
+    elif choix == '2':
+        print("\n--- CHOISIR NOUVEAU STATUT ---")
+        print("1. Disponible")
+        print("2. Loué")
+        print("3. En Maintenance")
+        print("4. Hors Service")
+
+        stat_choice = input("Choix : ")
+
+        if stat_choice == '1':
+            found.status = VehicleStatus.AVAILABLE
+        elif stat_choice == '2':
+            found.status = VehicleStatus.RENTED
+        elif stat_choice == '3':
+            found.status = VehicleStatus.UNDER_MAINTENANCE
+        elif stat_choice == '4':
+            found.status = VehicleStatus.OUT_OF_SERVICE
+        else:
+            print("Choix invalide, statut inchangé.")
+            return
+        
+        print(f"✅ Statut passé à : {found.status.value}")
+
+    else:
+        print("Modification annulée.")
