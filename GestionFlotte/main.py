@@ -24,11 +24,14 @@ def main():
             ui.add_maintenance_menu(my_fleet)
 
         elif choix == '5':
-            ui.delete_vehicle_menu(my_fleet)
+            ui.harness_animal_menu(my_fleet)
 
         elif choix == '6':
+            ui.delete_vehicle_menu(my_fleet)
+
+        elif choix == '7':
             storage.save_fleet(my_fleet)
-            print("👋 Au revoir !")
+            print("👋 Sauvegarde effectuée. À bientôt !")
             break
         
         else:
@@ -36,3 +39,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

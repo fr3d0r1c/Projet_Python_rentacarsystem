@@ -1,28 +1,32 @@
-from datetime import date
+from datetime import date, timedelta
 from enums import MaintenanceType
 
 class Maintenance:
-    def __init__(self, m_id: int, date_m: date, m_type: MaintenanceType, cost: float, description: str):
+    def __init__(self, m_id: int, date_m: date, m_type: MaintenanceType, cost: float, description: str, duration: float):
         self.id = m_id
         self.date = date_m
-        self.type = m_type # Doit être une valeur de l'Enum MaintenanceType
+        self.type = m_type
         self.cost = cost
         self.description = description
+        self.duration = duration
+
+    @property
+    def end_date(self):
+        days_int = int(self.duration) if self.duration >= 1 else 1
+        return self.date + timedelta(days=days_int)
 
     def validate(self):
-        """Affiche une confirmation visuelle de l'entretien."""
-        print(f"✅ Maintenance #{self.id} ({self.type.value}) validée le {self.date} pour {self.cost}€.")
+        print(f"✅ Maintenance #{self.id} ({self.type.value}) - Durée : {self.duration}j")
 
     def to_dict(self):
-        """Transforme l'objet en dictionnaire pour la sauvegarde JSON."""
         return {
             "id": self.id,
-            "date": str(self.date), # On convertit la date en texte (YYYY-MM-DD)
-            "type": self.type.value, # On garde le texte de l'enum (ex: "Vidange")
+            "date": str(self.date),
+            "type": self.type.value,
             "cost": self.cost,
-            "description": self.description
+            "description": self.description,
+            "duration": self.duration # ✅ On sauvegarde la durée
         }
 
     def __str__(self):
-        """Permet un affichage propre si on fait print(maintenance)"""
-        return f"[{self.date}] {self.type.value} - {self.description} ({self.cost}€)"
+        return f"[{self.date}] {self.type.value} ({self.duration}j) - {self.description}"

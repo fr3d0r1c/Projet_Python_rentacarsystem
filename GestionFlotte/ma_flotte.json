@@ -1,23 +1,48 @@
 [
     {
-        "type": "Car",
+        "type": "Donkey",
         "id": 1,
-        "daily_rate": 50.0,
-        "status": "En Maintenance",
+        "daily_rate": 25.0,
+        "status": "Disponible",
         "maintenance_log": [
             {
                 "id": 1,
                 "date": "2025-12-04",
-                "type": "Vidange",
-                "cost": 89.9,
-                "description": "Vidange des 20000 km"
+                "type": "Soin des sabots",
+                "cost": 40.0,
+                "description": "Parage des sabots.",
+                "duration": 0.5
             }
         ],
-        "brand": "Toyota",
-        "model": "Yaris",
-        "license_plate": "AA-123-BB",
-        "year": 2022,
-        "door_count": 5,
-        "has_ac": true
+        "name": "Cadichon",
+        "breed": "Provence",
+        "age": 6,
+        "pack_capacity_kg": 80.0,
+        "is_stubborn": true
+    },
+    {
+        "type": "Cart",
+        "id": 2,
+        "daily_rate": 50.0,
+        "status": "Disponible",
+        "maintenance_log": [],
+        "seat_count": 1,
+        "animal_ids": [
+            1
+        ],
+        "max_load_kg": 300.0
+    },
+    {
+        "type": "Horse",
+        "id": 3,
+        "daily_rate": 35.0,
+        "status": "Disponible",
+        "maintenance_log": [],
+        "name": "Tornade",
+        "breed": "Etalon",
+        "age": 8,
+        "wither_height": 160,
+        "shoe_size_front": 120,
+        "shoe_size_rear": 120
     }
 ]

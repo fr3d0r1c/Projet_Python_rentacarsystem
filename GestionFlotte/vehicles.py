@@ -1,6 +1,6 @@
 from typing import List
-# On importe les classes parentes
 from transport_base import TransportMode, MotorizedVehicle, TransportAnimal
+from animals import Horse, Donkey
 
 # --- 1. VOITURE ---
 class Car(MotorizedVehicle):
@@ -97,29 +97,64 @@ class GoKart(MotorizedVehicle):
         })
         return data
 
-# --- 6. CALÈCHE (Non motorisée) ---
-class Carriage(TransportMode):
-    def __init__(self, t_id, daily_rate, seat_count, has_roof):
+class TowedVehicle(TransportMode):
+    def __init__(self, t_id, daily_rate, seat_count):
         super().__init__(t_id, daily_rate)
         self.seat_count = seat_count
-        self.has_roof = has_roof
         self.animals: List[TransportAnimal] = []
 
     def harness_animal(self, animal: TransportAnimal):
         self.animals.append(animal)
-
-    def show_details(self):
-        toit = "Avec toit" if self.has_roof else "Décapotable"
-        attelage = ", ".join([a.name for a in self.animals]) if self.animals else "Personne"
-        return f"[Calèche] {self.seat_count} places ({toit}) - Tirée par: {attelage}"
+        print(f"✅ {animal.name} a été attelé.")
 
     def to_dict(self):
         data = super().to_dict()
-        # On sauvegarde aussi la liste des animaux attelés (version simplifiée)
-        animals_data = [a.to_dict() for a in self.animals]
         data.update({
-            "seat_count": self.seat_count, 
-            "has_roof": self.has_roof,
-            "animals": animals_data
+            "seat_count": self.seat_count,
+            "animal_ids": [a.id for a in self.animals] # <--- CHANGEMENT ICI
         })
+        return data
+    
+class Carriage(TowedVehicle):
+    def __init__(self, t_id, daily_rate, seat_count, has_roof):
+        super().__init__(t_id, daily_rate, seat_count)
+        self.has_roof = has_roof
+
+    def harness_animal(self, animal: TransportAnimal):
+        if isinstance(animal, Horse):
+            if animal.wither_height >= 140:
+                super().harness_animal(animal)
+            else:
+                print(f"❌ Impossible : {animal.name} est un Poney (trop petit pour une calèche).")
+        else:
+            print(f"❌ Impossible : Une calèche ne peut être tirée que par un Cheval.")
+
+    def show_details(self):
+        toit = "Toit" if self.has_roof else "Sans toit"
+        attelage = ", ".join([a.name for a in self.animals]) if self.animals else "Vide"
+        return f"[Calèche] {self.seat_count} places ({toit}) - Attelage: {attelage}"
+    
+    def to_dict(self):
+        data = super().to_dict()
+        data.update({"has_roof": self.has_roof})
+        return data
+    
+class Cart(TowedVehicle):
+    def __init__(self, t_id, daily_rate, seat_count, max_load_kg):
+        super().__init__(t_id, daily_rate, seat_count)
+        self.max_load_kg = max_load_kg
+
+    def harness_animal(self, animal: TransportAnimal):
+        if isinstance(animal, Donkey):
+            super().harness_animal(animal)
+        else:
+            print(f"❌ Impossible : Une charrette ne peut être tirée que par un Âne.")
+
+    def show_details(self):
+        attelage = ", ".join([a.name for a in self.animals]) if self.animals else "Vide"
+        return f"[Charrette] Charge Max: {self.max_load_kg}kg - Attelage: {attelage}"
+    
+    def to_dict(self):
+        data = super().to_dict()
+        data.update({"max_load_kg": self.max_load_kg})
         return data
