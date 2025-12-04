@@ -1,0 +1,23 @@
+[
+    {
+        "type": "Car",
+        "id": 1,
+        "daily_rate": 50.0,
+        "status": "En Maintenance",
+        "maintenance_log": [
+            {
+                "id": 1,
+                "date": "2025-12-04",
+                "type": "Vidange",
+                "cost": 89.9,
+                "description": "Vidange des 20000 km"
+            }
+        ],
+        "brand": "Toyota",
+        "model": "Yaris",
+        "license_plate": "AA-123-BB",
+        "year": 2022,
+        "door_count": 5,
+        "has_ac": true
+    }
+]

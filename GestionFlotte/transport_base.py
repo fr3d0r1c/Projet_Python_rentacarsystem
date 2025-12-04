@@ -1,4 +1,3 @@
-# Fichier: transport_base.py
 from abc import ABC, abstractmethod
 from typing import List
 from enums import VehicleStatus
@@ -17,11 +16,15 @@ class TransportMode(ABC):
 
     def to_dict(self):
         """Sauvegarde les infos de base (ID, Tarif, Status)"""
+
+        m_logs = [m.to_dict() for m in self.maintenance_log]
+
         return {
             "type": self.__class__.__name__,
             "id": self.id,
             "daily_rate": self.daily_rate,
-            "status": self.status.value
+            "status": self.status.value,
+            "maintenance_log": m_logs
         }
 
     @abstractmethod
