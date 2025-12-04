@@ -3,7 +3,6 @@ from typing import List
 from enums import VehicleStatus
 from maintenance import Maintenance
 
-# --- MÈRE SUPRÊME ---
 class TransportMode(ABC):
     def __init__(self, t_id: int, daily_rate: float):
         self.id = t_id
@@ -15,10 +14,7 @@ class TransportMode(ABC):
         self.maintenance_log.append(maintenance)
 
     def to_dict(self):
-        """Sauvegarde les infos de base (ID, Tarif, Status)"""
-
         m_logs = [m.to_dict() for m in self.maintenance_log]
-
         return {
             "type": self.__class__.__name__,
             "id": self.id,
@@ -31,7 +27,6 @@ class TransportMode(ABC):
     def show_details(self):
         pass
 
-# --- BRANCHE MOTEUR ---
 class MotorizedVehicle(TransportMode):
     def __init__(self, t_id, daily_rate, brand, model, license_plate, year):
         super().__init__(t_id, daily_rate)
@@ -40,33 +35,39 @@ class MotorizedVehicle(TransportMode):
         self.license_plate = license_plate
         self.year = year
 
-    def start_engine(self):
-        print(f"Moteur de {self.brand} démarré.")
-
     def to_dict(self):
         data = super().to_dict()
-        data.update({
-            "brand": self.brand,
-            "model": self.model,
-            "license_plate": self.license_plate,
-            "year": self.year
-        })
+        data.update({"brand": self.brand, "model": self.model, "license_plate": self.license_plate, "year": self.year})
         return data
 
-# --- BRANCHE ANIMAL ---
 class TransportAnimal(TransportMode):
     def __init__(self, t_id, daily_rate, name, breed, birth_date):
         super().__init__(t_id, daily_rate)
         self.name = name
         self.breed = breed
-        self.birth_date = birth_date
+        # birth_date n'est plus utilisé, on utilise 'age' dans les enfants, mais on garde la signature pour compatibilité
+        self.birth_date = birth_date 
 
-    # 👇 C'EST SOUVENT ICI QUE ÇA MANQUE ! 👇
     def to_dict(self):
         data = super().to_dict()
-        # On ajoute le Nom et la Race au dictionnaire
+        data.update({"name": self.name, "breed": self.breed})
+        return data
+
+class TowedVehicle(TransportMode):
+    def __init__(self, t_id, daily_rate, seat_count):
+        super().__init__(t_id, daily_rate)
+        self.seat_count = seat_count
+        self.animals = [] # Liste des animaux attelés
+
+    def harness_animal(self, animal):
+        self.animals.append(animal)
+        print(f"✅ {animal.name} a été attelé.")
+
+    def to_dict(self):
+        data = super().to_dict()
+        # On sauvegarde les IDs des animaux pour refaire le lien au chargement
         data.update({
-            "name": self.name,
-            "breed": self.breed
+            "seat_count": self.seat_count,
+            "animal_ids": [a.id for a in self.animals]
         })
         return data

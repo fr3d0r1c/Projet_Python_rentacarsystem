@@ -14,7 +14,7 @@ class Maintenance:
     def end_date(self):
         days_int = int(self.duration) if self.duration >= 1 else 1
         return self.date + timedelta(days=days_int)
-
+    
     def validate(self):
         print(f"✅ Maintenance #{self.id} ({self.type.value}) - Durée : {self.duration}j")
 
@@ -25,8 +25,5 @@ class Maintenance:
             "type": self.type.value,
             "cost": self.cost,
             "description": self.description,
-            "duration": self.duration # ✅ On sauvegarde la durée
+            "duration": self.duration
         }
-
-    def __str__(self):
-        return f"[{self.date}] {self.type.value} ({self.duration}j) - {self.description}"
