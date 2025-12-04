@@ -1,346 +1,244 @@
 from datetime import date
-from vehicles import Car, Truck, Motorcycle, Hearse, GoKart, Carriage, Cart, TowedVehicle
+# On importe les classes pour vérifier les types (isinstance)
+from vehicles import Car, Truck, Motorcycle, Hearse, GoKart, Carriage, Cart, TowedVehicle, MotorizedVehicle
 from animals import Horse, Donkey, Camel
-from transport_base import TransportAnimal
-from enums import MaintenanceType, VehicleStatus
+from transport_base import TransportAnimal, TransportMode
 from maintenance import Maintenance
+from enums import MaintenanceType, VehicleStatus
 
-# --- 🛠️ HELPER FUNCTIONS (Validations) ---
+# --- 💰 CONFIGURATION DES PRIX ---
+DEFAULT_RENTAL_PRICES = {
+    '1': 50.0, '2': 35.0, '3': 250.0, '4': 90.0, '5': 300.0, 
+    '6': 60.0, '7': 120.0, '8': 25.0, '9': 80.0, '10': 40.0
+}
+
+DEFAULT_MAINT_COSTS = {
+    MaintenanceType.MECHANICAL_CHECK: 50.0, MaintenanceType.CLEANING: 20.0,
+    MaintenanceType.HOOF_CARE: 40.0, MaintenanceType.SADDLE_MAINTENANCE: 15.0,
+    MaintenanceType.TIRE_CHANGE: 120.0, MaintenanceType.OIL_CHANGE: 89.0,
+    MaintenanceType.AXLE_GREASING: 30.0
+}
+
+DEFAULT_DURATIONS = {
+    MaintenanceType.MECHANICAL_CHECK: 1.0, MaintenanceType.CLEANING: 0.5,
+    MaintenanceType.HOOF_CARE: 0.5, MaintenanceType.SADDLE_MAINTENANCE: 2.0,
+    MaintenanceType.TIRE_CHANGE: 0.5, MaintenanceType.OIL_CHANGE: 0.5,
+    MaintenanceType.AXLE_GREASING: 1.0
+}
+
+# --- 🛠️ HELPER FUNCTIONS ---
 def ask_int(message):
     while True:
         try:
             return int(input(message))
         except ValueError:
-            print("❌ Erreur : Veuillez entrer un nombre entier.")
+            print("❌ Erreur : Entier requis.")
 
 def ask_float(message):
     while True:
         try:
             return float(input(message))
         except ValueError:
-            print("❌ Erreur : Veuillez entrer un nombre décimal (ex: 10.5).")
+            print("❌ Erreur : Décimal requis.")
+
+def ask_float_with_default(message, default_val):
+    user_input = input(f"{message} (Entrée pour {default_val}€) : ")
+    if user_input.strip() == "": return float(default_val)
+    try: return float(user_input)
+    except ValueError: return float(default_val)
 
 def ask_bool(message):
     val = input(f"{message} (o/n) : ").lower()
     return val in ['o', 'oui', 'y', 'yes']
 
-def ask_float_with_default(message, default_val):
-    user_input = input(f"{message} (Entrée pour {default_val}€) : ")
-
-    if user_input.strip() == "":
-        return float(default_val)
-    
-    try:
-        return float(user_input)
-    except ValueError:
-        print(f"⚠️ Saisie invalide. Utilisation de la valeur par défaut : {default_val}")
-        return float(default_val)
-
-DEFAULT_DURATIONS = {
-    MaintenanceType.MECHANICAL_CHECK: 1.0,
-    MaintenanceType.CLEANING: 0.5,
-    MaintenanceType.HOOF_CARE: 0.5,
-    MaintenanceType.SADDLE_MAINTENANCE: 2.0,
-    MaintenanceType.TIRE_CHANGE: 0.5,
-    MaintenanceType.OIL_CHANGE: 0.5,
-    MaintenanceType.AXLE_GREASING: 1.0
-}
-
-DEFAULT_RENTAL_PRICES = {
-    '1': 50.0,  # Voiture
-    '2': 35.0,  # Cheval/Poney
-    '3': 250.0, # Camion
-    '4': 90.0,  # Moto
-    '5': 300.0, # Corbillard
-    '6': 60.0,  # Kart
-    '7': 120.0, # Calèche
-    '8': 25.0,  # Âne
-    '9': 80.0   # Chameau
-}
-
-DEFAULT_MAINT_COSTS = {
-    MaintenanceType.MECHANICAL_CHECK: 50.0,
-    MaintenanceType.CLEANING: 20.0,
-    MaintenanceType.HOOF_CARE: 40.0,        # Maréchal-ferrant
-    MaintenanceType.SADDLE_MAINTENANCE: 15.0,
-    MaintenanceType.TIRE_CHANGE: 120.0,
-    MaintenanceType.OIL_CHANGE: 89.0,
-    MaintenanceType.AXLE_GREASING: 30.0
-}
-
-
-# --- 📋 FONCTIONS D'AFFICHAGE ---
+# --- 📋 MENU PRINCIPAL ---
 def show_main_menu():
-    print("\n" + "="*30)
-    print("   GESTION DE FLOTTE v3.1")
-    print("="*30)
-    print("1. 📋 Voir la flotte")
-    print("2. ➕ Ajouter un véhicule")
-    print("3. 🔧 Modifier un véhicule")
-    print("4. 🛠️ Ajouter un entretien")
-    print("5. 🐴 Atteler un animal")
-    print("6. 🗑️ Supprimer un véhicule")
-    print("7. 💾 Sauvegarder et Quitter")
-
-def add_maintenance_menu(fleet):
-    print("\n--- AJOUTER UN ENTRETIEN ---")
-    target_id = ask_int("ID du véhicule : ")
-
-    vehicle = next((v for v in fleet if v.id == target_id), None)
-    if not vehicle:
-        print("❌ Véhicule introuvable.")
-        return
-    
-    print(f"Véhicule : {vehicle.show_details()}")
-
-    print("Types :")
-    types_list = list(MaintenanceType)
-    for i, t in enumerate(types_list):
-        print(f"{i+1}. {t.value}")
-
-    type_index = ask_int("Choix du type : ") - 1
-    if 0 <= type_index < len(types_list):
-        selected_type = types_list[type_index]
-    else:
-        print("❌ Type invalide.")
-        return
-    
-    default_time = DEFAULT_DURATIONS.get(selected_type, 1.0)
-
-    standard_cost = DEFAULT_MAINT_COSTS.get(selected_type, 50.0)
-
-    print(f"Durée standard estimée : {default_time} jour(s).")
-    user_duration_str = input(f"Appuyez sur Entrée pour valider ou tapez une autre durée : ")
-
-    if user_duration_str.strip() == "":
-        final_duration = default_time
-    else:
-        try:
-            final_duration = float(user_duration_str)
-        except ValueError:
-            print("Erreur de saisie, utilisation de la durée par défaut.")
-            final_duration = default_time
-    
-    cost = ask_float_with_default("Coût de l'intervention", standard_cost)
-    desc = input("Description : ")
-
-    m_id = len(vehicle.maintenance_log) + 1
-    today = date.today()
-
-    new_m = Maintenance(m_id, today, selected_type, cost, desc, final_duration)
-    vehicle.add_maintenance(new_m)
-
-    print(f"⚠️ Le véhicule sera indisponible jusqu'au {new_m.end_date}")
-
-    if ask_bool("Passer le véhicule en statut 'En Maintenance' ?"):
-        vehicle.status = VehicleStatus.UNDER_MAINTENANCE
-
-    print("✅ Entretien enregistré !")
+    print("\n" + "="*40)
+    print("      GESTION DE FLOTTE v4.0")
+    print("="*40)
+    print("1. 📋 Voir toute la flotte")
+    print("--- GESTION ---")
+    print("2. 🚗 Gestion VÉHICULES (Ajout)")
+    print("3. 🐎 Gestion ANIMAUX (Ajout)")
+    print("4. 🚜 Gestion ATTELAGES (Ajout)")
+    print("--- ATELIER & SOINS ---")
+    print("5. 🔧 Maintenance MÉCANIQUE (Véhicules)")
+    print("6. 🩺 Soins VÉTÉRINAIRES (Animaux)")
+    print("--- ACTIONS ---")
+    print("7. 🐴 Atteler un animal")
+    print("8. 🗑️ Supprimer un élément")
+    print("9. 💾 Sauvegarder et Quitter")
 
 def list_fleet(fleet):
     if not fleet:
         print("\n🚫 La flotte est vide.")
     else:
-        print(f"\n--- ÉTAT DE LA FLOTTE ({len(fleet)} véhicules) ---")
+        print(f"\n--- ÉTAT DE LA FLOTTE ({len(fleet)} éléments) ---")
         for v in fleet:
             print(f"[{v.id}] {v.show_details()} | Statut: {v.status.value}")
 
-# --- ➕ FONCTION DE CRÉATION COMPLÈTE ---
-def add_vehicle_menu(fleet):
-    print("\n--- AJOUTER UN NOUVEAU VÉHICULE ---")
-    print("--- Moteurs ---")
-    print("1. Voiture      | 3. Camion")
-    print("4. Moto         | 5. Corbillard")
-    print("6. Karting")
-    print("--- Animaux ---")
-    print("2. Cheval/Poney | 8. Âne")
-    print("9. Chameau")
-    print("--- Attelages ---")
-    print("7. Calèche (Chevaux)")
-    print("10. Charrette (Ânes)")
-    print("0. Annuler")
+# --- 🚗 SOUS-MENU : AJOUT VÉHICULES ---
+def add_motor_menu(fleet):
+    print("\n--- 🚗 AJOUTER UN VÉHICULE MOTORISÉ ---")
+    print("1. Voiture")
+    print("2. Camion")
+    print("3. Moto")
+    print("4. Corbillard")
+    print("5. Karting")
+    print("0. Retour")
     
-    choice = input("\nVotre choix : ")
+    choice = input("Choix : ")
+    if choice == '0': return
+
+    # Logique commune ID et Prix
+    new_id = 1 if not fleet else max(v.id for v in fleet) + 1
+    # Mapping des choix vers les clés de prix (1=1, 2=3(Camion), etc.)
+    price_key = '1' if choice=='1' else '3' if choice=='2' else '4' if choice=='3' else '5' if choice=='4' else '6'
+    rate = ask_float_with_default("Tarif journalier", DEFAULT_RENTAL_PRICES.get(price_key, 50.0))
+
+    if choice == '1': # Voiture
+        fleet.append(Car(new_id, rate, input("Marque: "), input("Modèle: "), input("Plaque: "), ask_int("Année: "), ask_int("Portes: "), ask_bool("Clim?")))
+    elif choice == '2': # Camion
+        fleet.append(Truck(new_id, rate, input("Marque: "), input("Modèle: "), input("Plaque: "), ask_int("Année: "), ask_float("Vol m3: "), ask_float("Poids T: ")))
+    elif choice == '3': # Moto
+        fleet.append(Motorcycle(new_id, rate, input("Marque: "), input("Modèle: "), input("Plaque: "), ask_int("Année: "), ask_int("CC: "), ask_bool("TopCase?")))
+    elif choice == '4': # Corbillard
+        fleet.append(Hearse(new_id, rate, input("Marque: "), input("Modèle: "), input("Plaque: "), ask_int("Année: "), ask_float("Long. Cercueil: "), ask_bool("Frigo?")))
+    elif choice == '5': # Kart
+        fleet.append(GoKart(new_id, rate, input("Marque: "), input("Modèle: "), input("Plaque: "), ask_int("Année: "), input("Moteur: "), ask_bool("Indoor?")))
     
-    if choice == '0':
+    print("✅ Véhicule ajouté !")
+
+# --- 🐎 SOUS-MENU : AJOUT ANIMAUX ---
+def add_animal_menu(fleet):
+    print("\n--- 🐎 AJOUTER UN ANIMAL ---")
+    print("1. Cheval / Poney")
+    print("2. Âne")
+    print("3. Chameau")
+    print("0. Retour")
+
+    choice = input("Choix : ")
+    if choice == '0': return
+
+    new_id = 1 if not fleet else max(v.id for v in fleet) + 1
+    price_key = '2' if choice=='1' else '8' if choice=='2' else '9'
+    rate = ask_float_with_default("Tarif journalier", DEFAULT_RENTAL_PRICES.get(price_key, 35.0))
+
+    name = input("Nom : ")
+    breed = input("Race : ")
+    age = ask_int("Âge : ")
+
+    if choice == '1':
+        fleet.append(Horse(new_id, rate, name, breed, age, ask_int("Taille (cm): "), ask_int("Fer Av (mm): "), ask_int("Fer Arr (mm): ")))
+    elif choice == '2':
+        fleet.append(Donkey(new_id, rate, name, breed, age, ask_float("Capacité (kg): "), ask_bool("Têtu?")))
+    elif choice == '3':
+        fleet.append(Camel(new_id, rate, name, breed, age, ask_int("Bosses: "), ask_float("Eau (L): ")))
+    
+    print("✅ Animal ajouté !")
+
+# --- 🚜 SOUS-MENU : AJOUT ATTELAGES ---
+def add_towed_menu(fleet):
+    print("\n--- 🚜 AJOUTER UN ATTELAGE ---")
+    print("1. Calèche (Chevaux)")
+    print("2. Charrette (Ânes)")
+    print("0. Retour")
+
+    choice = input("Choix : ")
+    if choice == '0': return
+
+    new_id = 1 if not fleet else max(v.id for v in fleet) + 1
+    price_key = '7' if choice=='1' else '10'
+    rate = ask_float_with_default("Tarif journalier", DEFAULT_RENTAL_PRICES.get(price_key, 100.0))
+
+    if choice == '1':
+        fleet.append(Carriage(new_id, rate, ask_int("Places: "), ask_bool("Toit?")))
+    elif choice == '2':
+        fleet.append(Cart(new_id, rate, ask_int("Places: "), ask_float("Charge Max (kg): ")))
+    
+    print("✅ Attelage ajouté !")
+
+# --- 🔧 & 🩺 FONCTION MAINTENANCE GÉNÉRIQUE (Filtrée) ---
+def maintenance_process(fleet, category_filter):
+    """
+    category_filter : 'motor' ou 'animal' ou 'towed'
+    """
+    target_id = ask_int("ID de l'élément : ")
+    obj = next((v for v in fleet if v.id == target_id), None)
+
+    if not obj:
+        print("❌ ID introuvable.")
         return
 
-    # Calcul ID automatique
-    new_id = 1
-    if fleet:
-        new_id = max(v.id for v in fleet) + 1
+    # Vérification du type pour ne pas afficher le menu vétérinaire pour une voiture
+    if category_filter == 'motor' and not isinstance(obj, MotorizedVehicle):
+        print("❌ Cet ID n'est pas un véhicule motorisé.")
+        return
+    elif category_filter == 'animal' and not isinstance(obj, TransportAnimal):
+        print("❌ Cet ID n'est pas un animal.")
+        return
     
-    standard_price = DEFAULT_RENTAL_PRICES.get(choice, 50.0)
+    print(f"Sélection : {obj.show_details()}")
 
-    rate = ask_float_with_default("Tarif journalier", standard_price)
+    # Filtrage des types de maintenance disponibles
+    available_types = []
+    if category_filter == 'motor':
+        available_types = [MaintenanceType.MECHANICAL_CHECK, MaintenanceType.OIL_CHANGE, MaintenanceType.TIRE_CHANGE, MaintenanceType.CLEANING]
+    elif category_filter == 'animal':
+        available_types = [MaintenanceType.HOOF_CARE, MaintenanceType.SADDLE_MAINTENANCE, MaintenanceType.CLEANING]
+    else: # Towed / General
+        available_types = [MaintenanceType.AXLE_GREASING, MaintenanceType.CLEANING, MaintenanceType.TIRE_CHANGE]
 
-    # --- LOGIQUE DE CRÉATION PAR TYPE ---
+    print("--- Types d'interventions disponibles ---")
+    for i, t in enumerate(available_types):
+        print(f"{i+1}. {t.value}")
     
-    if choice == '1': # VOITURE
-        brand = input("Marque : ")
-        model = input("Modèle : ")
-        year = ask_int("Année : ")
-        plate = input("Plaque : ")
-        doors = ask_int("Portes : ")
-        ac = ask_bool("Climatisation ?")
-        fleet.append(Car(new_id, rate, brand, model, plate, year, doors, ac))
-        print("✅ Voiture ajoutée !")
-
-    elif choice == '2': # CHEVAL / PONEY
-        name = input("Nom : ")
-        breed = input("Race : ")
-        age = ask_int("Âge (ans) : ")
-        height = ask_int("Taille au garrot (cm) : ")
-        shoe_front = ask_int("Fer Antérieur (mm) : ")
-        shoe_rear = ask_int("Fer Postérieur (mm) : ")
-        
-        # Le programme détectera tout seul si c'est un Poney ou un Cheval
-        new_horse = Horse(new_id, rate, name, breed, age, height, shoe_front, shoe_rear)
-        fleet.append(new_horse)
-        print(f"✅ {new_horse.category} ajouté !")
-
-    elif choice == '3': # CAMION
-        brand = input("Marque : ")
-        model = input("Modèle : ")
-        year = ask_int("Année : ")
-        plate = input("Plaque : ")
-        vol = ask_float("Volume (m3) : ")
-        weight = ask_float("Poids Max (T) : ")
-        fleet.append(Truck(new_id, rate, brand, model, plate, year, vol, weight))
-        print("✅ Camion ajouté !")
-
-    elif choice == '4': # MOTO
-        brand = input("Marque : ")
-        model = input("Modèle : ")
-        year = ask_int("Année : ")
-        plate = input("Plaque : ")
-        cc = ask_int("Cylindrée (cc) : ")
-        top_case = ask_bool("TopCase ?")
-        fleet.append(Motorcycle(new_id, rate, brand, model, plate, year, cc, top_case))
-        print("✅ Moto ajoutée !")
-
-    elif choice == '5': # CORBILLARD
-        brand = input("Marque : ")
-        model = input("Modèle : ")
-        year = ask_int("Année : ")
-        plate = input("Plaque : ")
-        length = ask_float("Longueur max cercueil (m) : ")
-        frigo = ask_bool("Réfrigération active ?")
-        fleet.append(Hearse(new_id, rate, brand, model, plate, year, length, frigo))
-        print("✅ Corbillard ajouté !")
-
-    elif choice == '6': # KART
-        brand = input("Marque : ")
-        model = input("Modèle : ")
-        year = ask_int("Année : ")
-        plate = input("Numéro de Kart (ex: K-01) : ")
-        engine = input("Type moteur (ex: 4T Honda) : ")
-        indoor = ask_bool("Est-ce un kart Indoor ?")
-        fleet.append(GoKart(new_id, rate, brand, model, plate, year, engine, indoor))
-        print("✅ Kart ajouté !")
-
-    elif choice == '7': # CALÈCHE
-        seats = ask_int("Nombre de places : ")
-        roof = ask_bool("A un toit ?")
-        fleet.append(Carriage(new_id, rate, seats, roof))
-        print("✅ Calèche ajoutée !")
-
-    elif choice == '8': # ÂNE
-        name = input("Nom : ")
-        breed = input("Race : ")
-        age = ask_int("Âge (ans) : ")
-        capacity = ask_float("Capacité de portage (kg) : ")
-        stubborn = ask_bool("Est-il têtu ?")
-        fleet.append(Donkey(new_id, rate, name, breed, age, capacity, stubborn))
-        print("✅ Âne ajouté !")
-
-    elif choice == '9': # CHAMEAU
-        name = input("Nom : ")
-        breed = input("Race : ")
-        age = ask_int("Âge (ans) : ")
-        humps = ask_int("Nombre de bosses (1 ou 2) : ")
-        water = ask_float("Réserve d'eau (L) : ")
-        fleet.append(Camel(new_id, rate, name, breed, age, humps, water))
-        print("✅ Chameau/Dromadaire ajouté !")
-
-    elif choice == '10':
-        seats = ask_int("Nombre de places assises (conducteur) : ")
-        load = ask_float("Charge maximale (kg) : ")
-        fleet.append(Cart(new_id, rate, seats, load))
-        print("✅ Charrette ajoutée !")
-
-    else:
+    idx = ask_int("Choix : ") - 1
+    if not (0 <= idx < len(available_types)):
         print("❌ Choix invalide.")
-
-# --- 🔧 FONCTION DE MODIFICATION ---
-def modify_vehicle_menu(fleet):
-    print("\n--- MODIFIER UN VÉHICULE ---")
-    target_id = ask_int("ID du véhicule à modifier : ")
-    
-    found = None
-    for v in fleet:
-        if v.id == target_id:
-            found = v
-            break
-            
-    if not found:
-        print("❌ Véhicule introuvable.")
         return
 
-    print(f"\nSélection : {found.show_details()}")
-    print(f"Tarif actuel : {found.daily_rate}€ | Statut : {found.status.value}")
-    print("1. Modifier Tarif | 2. Modifier Statut | 0. Annuler")
+    selected_type = available_types[idx]
     
-    choix = input("Choix : ")
+    # Calculs auto
+    default_cost = DEFAULT_MAINT_COSTS.get(selected_type, 50.0)
+    default_time = DEFAULT_DURATIONS.get(selected_type, 1.0)
 
-    if choix == '1':
-        found.daily_rate = ask_float("Nouveau tarif : ")
-        print("✅ Tarif mis à jour.")
-
-    elif choix == '2':
-        print("1. Disponible | 2. Loué | 3. Maintenance | 4. Hors Service")
-        s = input("Nouveau statut : ")
-        if s == '1': found.status = VehicleStatus.AVAILABLE
-        elif s == '2': found.status = VehicleStatus.RENTED
-        elif s == '3': found.status = VehicleStatus.UNDER_MAINTENANCE
-        elif s == '4': found.status = VehicleStatus.OUT_OF_SERVICE
-        print(f"✅ Statut mis à jour : {found.status.value}")
-
-# --- 🗑️ FONCTION DE SUPPRESSION ---
-def delete_vehicle_menu(fleet):
-    print("\n--- SUPPRIMER ---")
-    target_id = ask_int("ID à supprimer : ")
+    cost = ask_float_with_default("Coût", default_cost)
+    print(f"Durée estimée : {default_time}j")
     
-    found = next((v for v in fleet if v.id == target_id), None)
-    
-    if found:
-        print(f"❓ Supprimer : {found.show_details()}")
-        if ask_bool("Confirmer ?"):
-            fleet.remove(found)
-            print("🗑️ Supprimé.")
-        else:
-            print("Annulé.")
-    else:
-        print("❌ Introuvable.")
+    # Création
+    m_id = len(obj.maintenance_log) + 1
+    new_m = Maintenance(m_id, date.today(), selected_type, cost, input("Description : "), default_time)
+    obj.add_maintenance(new_m)
 
+    if ask_bool("Mettre en indisponibilité (Maintenance) ?"):
+        obj.status = VehicleStatus.UNDER_MAINTENANCE
+    
+    print("✅ Maintenance enregistrée !")
+
+
+# --- 🐴 ATTELAGE ---
 def harness_animal_menu(fleet):
-    print("\n--- ATTELER UN ANIMAL ---")
-
-    target_id = ask_int("ID de la Calèche ou Charrette : ")
-    vehicle = next((v for v in fleet if v.id == target_id), None)
-
+    print("\n--- ATTELAGE ---")
+    vid = ask_int("ID Calèche/Charrette : ")
+    vehicle = next((v for v in fleet if v.id == vid), None)
     if not isinstance(vehicle, TowedVehicle):
-        print("❌ Ce véhicule ne peut pas être attelé (ou n'existe pas).")
+        print("❌ Pas un véhicule tracté.")
         return
     
-    print(f"Véhicule sélectionné : {vehicle.show_details()}")
-
-    animal_id = ask_int("ID de l'animal à atteler : ")
-    animal = next((a for a in fleet if a.id == animal_id), None)
-
+    aid = ask_int("ID Animal : ")
+    animal = next((a for a in fleet if a.id == aid), None)
     if not isinstance(animal, TransportAnimal):
-        print("❌ Cet ID ne correspond pas à un animal.")
+        print("❌ Pas un animal.")
         return
-    
-    print(f"Tentative d'attelage de {animal.name}...")
+        
     vehicle.harness_animal(animal)
+
+# --- 🗑️ SUPPRESSION ---
+def delete_vehicle_menu(fleet):
+    tid = ask_int("ID à supprimer : ")
+    found = next((v for v in fleet if v.id == tid), None)
+    if found and ask_bool(f"Supprimer {found.show_details()} ?"):
+        fleet.remove(found)
+        print("🗑️ Supprimé.")
