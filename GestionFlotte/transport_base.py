@@ -30,11 +30,12 @@ class TransportMode(ABC):
 
 # --- BRANCHE MOTEUR ---
 class MotorizedVehicle(TransportMode):
-    def __init__(self, t_id, daily_rate, brand, model, license_plate):
+    def __init__(self, t_id, daily_rate, brand, model, license_plate, year):
         super().__init__(t_id, daily_rate)
         self.brand = brand
         self.model = model
         self.license_plate = license_plate
+        self.year = year
 
     def start_engine(self):
         print(f"Moteur de {self.brand} démarré.")
@@ -44,7 +45,8 @@ class MotorizedVehicle(TransportMode):
         data.update({
             "brand": self.brand,
             "model": self.model,
-            "license_plate": self.license_plate
+            "license_plate": self.license_plate,
+            "year": self.year
         })
         return data
 

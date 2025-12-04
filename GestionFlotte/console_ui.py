@@ -41,24 +41,47 @@ def list_fleet(fleet):
 
 def add_vehicle_menu(fleet):
     print("\n--- AJOUT ---")
-    print("1. Voiture | 2. Poney | 3. Camion | 4. Moto")
+    print("1. Voiture | 2. Cheval/Poney | 3. Camion | 4. Moto")
     print("0. Annuler")
     choice = input("Choix : ")
     
     if choice == '0': return
 
     new_id = 1
-    if fleet: new_id = max(v.id for v in fleet) + 1
-    rate = ask_float("Tarif (€) : ")
+    
+    if choice in ['1', '2', '3', '4']:
+        rate = ask_float("Tarif journalier (€) : ")
 
     if choice == '1':
-        fleet.append(Car(new_id, rate, input("Marque: "), input("Modèle: "), input("Plaque: "), ask_int("Portes: "), ask_bool("Clim?")))
+        brand = input("Marque : ")
+        model = input("Modèle : ")
+        year = ask_int("Année de fabrication : ")
+        plate = input("Plaque : ")
+        doors = ask_int("Nombre de portes : ")
+        ac = ask_bool("Climatisation ?")
+        fleet.append(Car(new_id, rate, brand, model, plate, year, doors, ac))
         print("✅ Voiture ajoutée !")
+
     elif choice == '2':
-        fleet.append(Horse(new_id, rate, input("Nom: "), input("Race: "), date(2020,1,1), ask_int("Taille cm: "), ask_int("Fer: ")))
-        print("✅ Poney ajouté !")
+        name = input("Nom : ")
+        breed = input("Race : ")
+        age = ask_int("Âge de l'animal : ")
+        height = ask_int("Taille au garrot (cm) : ")
+        shoe_front = ask_int("Taille fer Antérieur (en mm) : ")
+        shoe_rear = ask_int("Taille fer Postérieur (en mm) : ")
+
+        new_horse = Horse(new_id, rate, name, breed, age, height, shoe_front, shoe_rear)
+        fleet.append(new_horse)
+        print(f"✅ {new_horse.category} ajouté avec succès !")
+        
     elif choice == '3':
-        fleet.append(Truck(new_id, rate, input("Marque: "), input("Modèle: "), input("Plaque: "), ask_float("Vol m3: "), ask_float("Poids T: ")))
+        brand = input("Marque : ")
+        model = input("Modèle : ")
+        year = ask_int("Année : ")
+        plate = input("Plaque : ")
+        vol = ask_float("Volume (m3) : ")
+        weight = ask_float("Poids Max (T) : ")
+        fleet.append(Truck(new_id, rate, brand, model, plate, year, vol, weight))
         print("✅ Camion ajouté !")
     elif choice == '4':
         fleet.append(Motorcycle(new_id, rate, input("Marque: "), input("Modèle: "), input("Plaque: "), ask_int("CC: "), ask_bool("TopCase?")))

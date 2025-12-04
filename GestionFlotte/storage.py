@@ -36,7 +36,15 @@ class StorageManager:
             elif obj_type == "Truck":
                 obj = Truck(tid, rate, item["brand"], item["model"], item["license_plate"], item["cargo_volume"], item["max_weight"])
             elif obj_type == "Horse":
-                obj = Horse(tid, rate, item["name"], item["breed"], default_date, item["wither_height"], item["shoe_size"])
+                birth = date(2020, 1, 1)
+
+                s_front = item.get("shoe_size_front", 0)
+                s_rear = item.get("shoe_size_rear", 0)
+
+                obj = Horse(tid, rate, item["name"], item["breed"], birth,
+                            item["wither_height"],
+                            s_front,
+                            s_rear)
             elif obj_type == "Donkey":
                 obj = Donkey(tid, rate, item["name"], item["breed"], default_date, item["pack_capacity_kg"], item["is_stubborn"])
             elif obj_type == "Camel":

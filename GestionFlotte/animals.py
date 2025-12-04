@@ -2,20 +2,33 @@ from datetime import date
 from transport_base import TransportAnimal
 
 class Horse(TransportAnimal):
-    def __init__(self, t_id, daily_rate, name, breed, birth_date, wither_height, shoe_size):
-        super().__init__(t_id, daily_rate, name, breed, birth_date)
+    def __init__(self, t_id, daily_rate, name, breed, age, wither_height, shoe_size_front, shoe_size_rear):
+        super().__init__(t_id, daily_rate, name, breed, None)
+        self.age = age
         self.wither_height = wither_height
-        self.shoe_size = shoe_size
+        self.shoe_size_front = shoe_size_front
+        self.shoe_size_rear = shoe_size_rear
 
+    @property
+    def category(self):
+        if self.wither_height < 140:
+            return "Poney"
+        else:
+            return "Cheval"
+        
     def show_details(self):
-        return f"[Poney] {self.name} ({self.breed})"
-
+        return (f"[{self.category}] {self.name} ({self.age} ans) - "
+                f"Taille: {self.wither_height}cm - "
+                f"Fers: Av.{self.shoe_size_front}mm / Arr.{self.shoe_size_rear}mm")
+    
     def to_dict(self):
         data = super().to_dict()
         data.update({
-            "wither_height": self.wither_height, 
-            "shoe_size": self.shoe_size
-            })
+            "age": self.age,
+            "wither_height": self.wither_height,
+            "shoe_size_front": self.shoe_size_front,
+            "shoe_size_rear": self.shoe_size_rear
+        })
         return data
 
 class Donkey(TransportAnimal):

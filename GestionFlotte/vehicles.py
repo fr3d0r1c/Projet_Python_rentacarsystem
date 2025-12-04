@@ -1,14 +1,14 @@
 from transport_base import TransportMode, MotorizedVehicle, TransportAnimal
 
 class Car(MotorizedVehicle):
-    def __init__(self, t_id, daily_rate, brand, model, license_plate, door_count, has_ac):
-        super().__init__(t_id, daily_rate, brand, model, license_plate)
+    def __init__(self, t_id, daily_rate, brand, model, license_plate, year, door_count, has_ac):
+        super().__init__(t_id, daily_rate, brand, model, license_plate, year)
         self.door_count = door_count
         self.has_ac = has_ac
 
     def show_details(self):
         clim = "Clim" if self.has_ac else "Pas de clim"
-        return f"[Voiture] {self.brand} {self.model} ({clim})"
+        return f"[Voiture {self.year}] {self.brand} {self.model} ({clim})"
 
     def to_dict(self):
         data = super().to_dict()
@@ -16,13 +16,13 @@ class Car(MotorizedVehicle):
         return data
 
 class Truck(MotorizedVehicle):
-    def __init__(self, t_id, daily_rate, brand, model, license_plate, cargo_volume, max_weight):
-        super().__init__(t_id, daily_rate, brand, model, license_plate)
+    def __init__(self, t_id, daily_rate, brand, model, license_plate, year, cargo_volume, max_weight):
+        super().__init__(t_id, daily_rate, brand, model, license_plate, year)
         self.cargo_volume = cargo_volume
         self.max_weight = max_weight
 
     def show_details(self):
-        return f"[Camion] {self.brand} {self.model} ({self.max_weight}T)"
+        return f"[Camion {self.year}] {self.brand} {self.model} ({self.max_weight}T)"
 
     def to_dict(self):
         data = super().to_dict()
