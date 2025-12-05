@@ -43,7 +43,7 @@ Cette application doit permettre à une agence de location de :
 ## Livrable
 
 - Code en modules (repo GitHub)
-- UML de calsses
+- UML de classes
 - README
 - Tests unitaires
 
