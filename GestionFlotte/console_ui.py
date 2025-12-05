@@ -25,14 +25,19 @@ DEFAULT_RENTAL_PRICES = {
 }
 
 DEFAULT_MAINT_COSTS = {
+    # Basiques
     MaintenanceType.MECHANICAL_CHECK: 50.0, MaintenanceType.CLEANING: 20.0,
     MaintenanceType.HOOF_CARE: 40.0, MaintenanceType.SADDLE_MAINTENANCE: 15.0,
     MaintenanceType.TIRE_CHANGE: 120.0, MaintenanceType.OIL_CHANGE: 89.0,
     MaintenanceType.AXLE_GREASING: 30.0,
-    MaintenanceType.HULL_CLEANING: 500.0, MaintenanceType.SONAR_CHECK: 150.0,
-    MaintenanceType.NUCLEAR_SERVICE: 5000.0, MaintenanceType.AVIONICS_CHECK: 300.0,
-    MaintenanceType.ROTOR_INSPECTION: 200.0, MaintenanceType.WING_CARE: 60.0,
-    MaintenanceType.SCALE_POLISHING: 100.0
+    # Spécifiques (MER / AIR / FANTASY)
+    MaintenanceType.HULL_CLEANING: 500.0,    # Bateau
+    MaintenanceType.SONAR_CHECK: 150.0,      # Sous-marin
+    MaintenanceType.NUCLEAR_SERVICE: 5000.0, # Sous-marin
+    MaintenanceType.AVIONICS_CHECK: 300.0,   # Avion
+    MaintenanceType.ROTOR_INSPECTION: 200.0, # Hélico
+    MaintenanceType.WING_CARE: 60.0,         # Aigle/Dragon
+    MaintenanceType.SCALE_POLISHING: 100.0   # Dragon
 }
 
 DEFAULT_DURATIONS = {
@@ -40,9 +45,13 @@ DEFAULT_DURATIONS = {
     MaintenanceType.HOOF_CARE: 0.5, MaintenanceType.SADDLE_MAINTENANCE: 2.0,
     MaintenanceType.TIRE_CHANGE: 0.5, MaintenanceType.OIL_CHANGE: 0.5,
     MaintenanceType.AXLE_GREASING: 1.0,
-    MaintenanceType.HULL_CLEANING: 3.0, MaintenanceType.SONAR_CHECK: 1.0,
-    MaintenanceType.NUCLEAR_SERVICE: 15.0, MaintenanceType.AVIONICS_CHECK: 2.0,
-    MaintenanceType.ROTOR_INSPECTION: 1.0, MaintenanceType.WING_CARE: 1.0,
+    # Spécifiques
+    MaintenanceType.HULL_CLEANING: 3.0,
+    MaintenanceType.SONAR_CHECK: 1.0,
+    MaintenanceType.NUCLEAR_SERVICE: 15.0,
+    MaintenanceType.AVIONICS_CHECK: 2.0,
+    MaintenanceType.ROTOR_INSPECTION: 1.0,
+    MaintenanceType.WING_CARE: 1.0,
     MaintenanceType.SCALE_POLISHING: 0.5
 }
 
@@ -235,7 +244,13 @@ def add_menu_by_environment(fleet):
         if c in ['1', '2', '3', '4', '5']:
             brand = ask_text("Marque")
             model = ask_text("Modèle")
-            plate = ask_text("Plaque")
+
+            if c == '5': # Kart
+                label_id = "Numéro du Kart (ex: K-01)"
+            else:
+                label_id = "Plaque d'immatriculation"
+
+            plate = ask_text(label_id)
             year = ask_int("Année")
 
             if c=='1': fleet.append(Car(new_id, rate, brand, model, plate, year, ask_int("Nb Portes"), ask_bool("Climatisation ?")))
@@ -266,10 +281,12 @@ def add_menu_by_environment(fleet):
         rate = ask_float_def("Tarif", DEFAULT_RENTAL_PRICES.get(key[c], 200.0))
 
         if c in ['1', '2']: # Moteurs Marins
-            brand = ask_text("Marque/Chantier")
-            model = ask_text("Modèle")
-            plate = ask_text("Immatriculation")
-            year = ask_int("Année")
+            brand = ask_text("Chantier Naval / Marque")
+            model = ask_text("Modèle / Classe")
+
+            plate = ask_text("Nom du Vaisseau ou Numéro de Coque")
+            year = ask_int("Année de mise à l'eau")
+
             if c=='1': fleet.append(Boat(new_id, rate, brand, model, plate, year, ask_float("Longueur (m)"), ask_float("Puissance (cv)")))
             elif c=='2': fleet.append(Submarine(new_id, rate, brand, model, plate, year, ask_float("Prof. Max (m)"), ask_bool("Nucléaire ?")))
 
@@ -290,8 +307,10 @@ def add_menu_by_environment(fleet):
         if c in ['1', '2']: # Moteurs Air
             brand = ask_text("Constructeur")
             model = ask_text("Modèle")
-            plate = ask_text("Immatriculation")
+
+            plate = ask_text("Immatriculation (ex: F-GHIJ)")
             year = ask_int("Année")
+
             if c=='1': fleet.append(Plane(new_id, rate, brand, model, plate, year, ask_float("Envergure (m)"), ask_int("Nb Moteurs")))
             elif c=='2': fleet.append(Helicopter(new_id, rate, brand, model, plate, year, ask_int("Nb Pales"), ask_int("Alt. Max (m)")))
         
@@ -305,7 +324,8 @@ def add_menu_by_environment(fleet):
 
 # --- MAINTENANCE ---
 def maintenance_menu(fleet):
-    list_fleet(fleet) # On affiche la liste pour aider
+    list_fleet(fleet) # Affiche le tableau pour choisir l'ID
+
     tid = ask_int("ID de l'élément à entretenir")
     obj = next((v for v in fleet if v.id == tid), None)
     
@@ -315,35 +335,63 @@ def maintenance_menu(fleet):
     
     console.print(f"[bold]Sélection :[/] {obj.show_details()}")
     
-    # Logique options (identique mais affichage amélioré)
     options = [MaintenanceType.CLEANING]
+
     if isinstance(obj, TransportAnimal):
-        if isinstance(obj, (Horse, Donkey, Camel)): options.extend([MaintenanceType.HOOF_CARE, MaintenanceType.SADDLE_MAINTENANCE])
-        elif isinstance(obj, Dragon): options.extend([MaintenanceType.WING_CARE, MaintenanceType.SCALE_POLISHING])
-        # ... autres cas
+        if isinstance(obj, (Horse, Donkey, Camel)):
+            options.extend([MaintenanceType.HOOF_CARE, MaintenanceType.SADDLE_MAINTENANCE])
+        
+        elif isinstance(obj, (Eagle, Dragon)):
+            options.append(MaintenanceType.WING_CARE)
+            if isinstance(obj, Dragon):
+                options.append(MaintenanceType.SCALE_POLISHING)
+
+        elif isinstance(obj, (Whale, Dolphin)):
+            options.append(MaintenanceType.HOOF_CARE)
+
     elif isinstance(obj, MotorizedVehicle):
         options.extend([MaintenanceType.MECHANICAL_CHECK, MaintenanceType.OIL_CHANGE])
-        if isinstance(obj, Submarine): options.append(MaintenanceType.NUCLEAR_SERVICE)
-        # ... autres cas
+        if isinstance(obj, (Car, Truck, Motorcycle, Hearse, GoKart)):
+            options.append(MaintenanceType.TIRE_CHANGE)
 
-    rprint("\n[bold u]Types possibles :[/]")
+        elif isinstance(obj, (Boat, Submarine)):
+            options.append(MaintenanceType.HULL_CLEANING)
+
+            if isinstance(obj, Submarine):
+                options.extend([MaintenanceType.SONAR_CHECK, MaintenanceType.NUCLEAR_SERVICE])
+
+        elif isinstance(obj, (Plane, Helicopter)):
+            options.append(MaintenanceType.AVIONICS_CHECK)
+            if isinstance(obj, Helicopter):
+                options.append(MaintenanceType.ROTOR_INSPECTION)
+
+    elif isinstance(obj, TowedVehicle):
+        options.extend([MaintenanceType.AXLE_GREASING, MaintenanceType.TIRE_CHANGE])
+
+    rprint("\n[bold u]Interventions possibles pour ce type :[/]")
+
+    choices_str = []
     for i, t in enumerate(options):
         cost = DEFAULT_MAINT_COSTS.get(t, 0)
-        rprint(f"  [cyan]{i+1}.[/] {t.value} [dim](~{cost}€)[/]")
+        rprint(f"  [cyan bold]{i+1}.[/] {t.value} [dim](~{cost}€)[/]")
+        choices_str.append(str(i+1))
     
-    idx = ask_int("Votre choix") - 1
-    if not (0 <= idx < len(options)): return
+    c_idx = Prompt.ask("Votre choix", choices=choices_str)
+    selected_type = options[int(c_idx) - 1]
 
-    sel_type = options[idx]
-    cost = ask_float_def("Coût", DEFAULT_MAINT_COSTS.get(sel_type, 50.0))
-    dur = DEFAULT_DURATIONS.get(sel_type, 1.0)
-    
-    obj.add_maintenance(Maintenance(len(obj.maintenance_log)+1, date.today(), sel_type, cost, "Entretien", dur))
-    
+    def_cost = DEFAULT_MAINT_COSTS.get(selected_type, 50.0)
+    def_time = DEFAULT_DURATIONS.get(selected_type, 1.0)
+
+    cost = ask_float_def("Coût final", def_cost)
+    console.print(f"[dim]Durée estimée : {def_time} jour(s)[/]")
+
+    new_m = Maintenance(len(obj.maintenance_log)+1, date.today(), selected_type, cost, "Entretien", def_time)
+    obj.add_maintenance(new_m)
+
     if ask_bool("Mettre en statut 'En Maintenance' ?"):
         obj.status = VehicleStatus.UNDER_MAINTENANCE
-    
-    console.print("[bold green]✅ Maintenance enregistrée ![/]")
+
+    console.print("[bold green]✅ Maintenance enregistrée avec succès ![/]")
 
 # --- ATTELAGE ---
 def harness_menu(fleet):
