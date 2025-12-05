@@ -1,92 +1,131 @@
 from datetime import date
-from typing import List, Optional
+from typing import List, Optional, Type
 
-# On importe nos briques
+# Imports des modules voisins
 from GestionFlotte.transport_base import TransportMode
 from GestionFlotte.enums import VehicleStatus
 from clients.customer import Customer
 from .rental import Rental
 
-
 class CarRentalSystem:
     def __init__(self):
-        # Les 3 listes principales de votre base de données en mémoire
+        # Les 3 listes principales (Base de données en mémoire)
         self.fleet: List[TransportMode] = []
         self.customers: List[Customer] = []
         self.rentals: List[Rental] = []
 
-    # --- GESTION DE LA FLOTTE ---
+    # ==========================================
+    # 1. GESTION (CRUD)
+    # ==========================================
+    
     def add_vehicle(self, vehicle: TransportMode):
         self.fleet.append(vehicle)
-        print(f"Véhicule ajouté : {vehicle.brand} {vehicle.model} (ID: {vehicle.id})")
+        # Pas de print ici pour ne pas polluer l'interface, on laisse l'UI gérer
 
     def find_vehicle(self, v_id: int) -> Optional[TransportMode]:
-        """Cherche un véhicule par son ID"""
-        for v in self.fleet:
-            if v.id == v_id:
-                return v
-        return None
+        return next((v for v in self.fleet if v.id == v_id), None)
 
-    # --- GESTION DES CLIENTS ---
     def add_customer(self, customer: Customer):
         self.customers.append(customer)
-        print(f"Client enregistré : {customer.name} (ID: {customer.id})")
 
     def find_customer(self, c_id: int) -> Optional[Customer]:
-        """Cherche un client par son ID"""
-        for c in self.customers:
-            if c.id == c_id:
-                return c
-        return None
+        return next((c for c in self.customers if c.id == c_id), None)
 
-    # --- CŒUR DU MÉTIER : LA LOCATION ---
-    def rent_vehicle(self, customer_id: int, vehicle_id: int, start: date, end: date):
-        """
-        Tente de créer une location.
-        Vérifie si le véhicule existe, s'il est disponible, et si le client existe.
-        """
-        # 1. On récupère les objets
+    # ==========================================
+    # 2. GESTION DES LOCATIONS (CORE)
+    # ==========================================
+
+    def create_rental(self, customer_id: int, vehicle_id: int, start: date, end: date) -> Optional[Rental]:
+        """Crée un contrat de location si tout est valide."""
         client = self.find_customer(customer_id)
         vehicule = self.find_vehicle(vehicle_id)
 
-        # 2. Vérifications de sécurité
+        # Vérifications
         if not client:
             print("❌ Erreur : Client introuvable.")
             return None
-        
         if not vehicule:
             print("❌ Erreur : Véhicule introuvable.")
             return None
-
         if vehicule.status != VehicleStatus.AVAILABLE:
-            print(f"❌ Erreur : Le véhicule {vehicule.brand} n'est pas disponible (Statut : {vehicule.status.value}).")
+            print(f"❌ Indisponible : Ce véhicule est actuellement {vehicule.status.value}.")
             return None
 
-        # 3. Création du contrat
-        # On génère un ID unique pour la location (taille de la liste + 1)
-        rental_id = len(self.rentals) + 1
-        new_rental = Rental(rental_id, vehicule, client, start, end)
+        # Création
+        new_id = len(self.rentals) + 1
+        rental = Rental(new_id, vehicule, client, start, end)
         
-        # 4. Enregistrement et Mise à jour du statut
-        self.rentals.append(new_rental)
+        # Enregistrement
+        self.rentals.append(rental)
+        
+        # Mise à jour du statut du véhicule
         vehicule.status = VehicleStatus.RENTED
         
-        print(f"✅ Location validée ! {client.name} part avec la {vehicule.brand} pour {new_rental.total_price}€.")
-        return new_rental
+        print(f"✅ Location validée pour {rental.total_price}€")
+        return rental
 
     def return_vehicle(self, rental_id: int):
-        """Clôture une location et rend le véhicule disponible"""
-        # On cherche la location
-        target_rental = None
-        for r in self.rentals:
-            if r.id == rental_id:
-                target_rental = r
-                break
+        """Clôture une location."""
+        rental = next((r for r in self.rentals if r.id == rental_id), None)
         
-        if target_rental and target_rental.is_active:
-            target_rental.close_rental()
-            # IMPORTANT : On libère le véhicule
-            target_rental.vehicle.status = VehicleStatus.AVAILABLE
-            print(f"🚗 Véhicule {target_rental.vehicle.brand} retourné et disponible.")
+        if rental and rental.is_active:
+            rental.close_rental()
+            rental.vehicle.status = VehicleStatus.AVAILABLE
+            print(f"🚗 Retour confirmé pour {rental.vehicle.brand} {rental.vehicle.model}.")
         else:
-            print("❌ Erreur : Location introuvable ou déjà clôturée.")
+            print("❌ Erreur : Location introuvable ou déjà terminée.")
+
+    # ==========================================
+    # 3. RECHERCHE (SEARCH)
+    # ==========================================
+
+    def search_vehicles(self, 
+                        vehicle_type: Type[TransportMode] = None, 
+                        available_only: bool = True, 
+                        max_price: float = None) -> List[TransportMode]:
+        """
+        Filtre la flotte selon plusieurs critères.
+        Ex: Trouver toutes les Voitures disponibles à moins de 100€.
+        """
+        results = []
+        for v in self.fleet:
+            # Critère 1 : Disponibilité
+            if available_only and v.status != VehicleStatus.AVAILABLE:
+                continue
+            
+            # Critère 2 : Type (ex: chercher que les Bateaux)
+            if vehicle_type and not isinstance(v, vehicle_type):
+                continue
+
+            # Critère 3 : Prix max
+            if max_price and v.daily_rate > max_price:
+                continue
+            
+            results.append(v)
+        
+        return results
+
+    # ==========================================
+    # 4. RAPPORTS (REPORTS)
+    # ==========================================
+
+    def generate_active_rentals_report(self):
+        """Affiche toutes les locations en cours."""
+        print("\n--- 📄 RAPPORT : LOCATIONS ACTIVES ---")
+        active_rentals = [r for r in self.rentals if r.is_active]
+        
+        if not active_rentals:
+            print("Aucune location en cours.")
+        else:
+            for r in active_rentals:
+                print(r.show_details())
+        print("--------------------------------------")
+
+    def generate_revenue_report(self):
+        """Calcule le chiffre d'affaires total."""
+        total_revenue = sum(r.total_price for r in self.rentals)
+        print(f"\n--- 💰 RAPPORT FINANCIER ---")
+        print(f"Nombre total de contrats : {len(self.rentals)}")
+        print(f"Chiffre d'Affaires Total : {total_revenue}€")
+        print("----------------------------")
+        return total_revenue
