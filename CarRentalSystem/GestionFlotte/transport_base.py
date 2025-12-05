@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
-from enums import VehicleStatus
-from maintenance import Maintenance
+from .enums import VehicleStatus
+from .maintenance import Maintenance
 
 class TransportMode(ABC):
     def __init__(self, t_id: int, daily_rate: float):

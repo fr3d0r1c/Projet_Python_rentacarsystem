@@ -1,9 +1,9 @@
 import json
 from datetime import date
-from enums import VehicleStatus, MaintenanceType
-from maintenance import Maintenance
-from vehicles import *
-from animals import *
+from GestionFlotte.enums import VehicleStatus, MaintenanceType
+from GestionFlotte.maintenance import Maintenance
+from GestionFlotte.vehicles import * 
+from GestionFlotte.animals import *
 
 class StorageManager:
     def __init__(self, filename="fleet_data.json"):

@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from enums import MaintenanceType
+from .enums import MaintenanceType
 
 class Maintenance:
     def __init__(self, m_id: int, date_m: date, m_type: MaintenanceType, cost: float, description: str, duration: float):

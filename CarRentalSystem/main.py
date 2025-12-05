@@ -1,6 +1,6 @@
 # Fichier: main.py
 from storage import StorageManager
-import console_ui as ui 
+import console_ui as ui
 
 def main():
     storage = StorageManager("ma_flotte.json")
