@@ -1,1 +1,5 @@
-./GestionFlotte/__pycache__/
+__pycache__/
+
+ma_flotte.json
+
+.DS_Store
