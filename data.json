@@ -1,0 +1,27 @@
+{
+    "fleet": [
+        {
+            "type": "Car",
+            "id": 1,
+            "daily_rate": 50.0,
+            "status": "Disponible",
+            "maintenance_log": [],
+            "brand": "Toyota",
+            "model": "AA-123-BB",
+            "license_plate": "Yaris",
+            "year": 2025,
+            "door_count": 5,
+            "has_ac": true
+        }
+    ],
+    "customers": [
+        {
+            "id": 1,
+            "name": "Alleron Frédéric",
+            "driver_license": "12345",
+            "email": "falleron.ira2028@esaip.org",
+            "phone": "0771689357"
+        }
+    ],
+    "rentals": []
+}

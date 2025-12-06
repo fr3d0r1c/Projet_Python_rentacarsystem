@@ -1,6 +1,6 @@
 # Fichier: main.py
 from storage import StorageManager
-import console_ui as ui 
+import console_ui as ui
 
 def main():
     storage = StorageManager("ma_flotte.json")
@@ -23,13 +23,16 @@ def main():
             ui.harness_menu(my_fleet)
 
         elif choix == '5':
-            # 👇 NOUVELLE FONCTION
-            ui.show_single_vehicle_details(my_fleet)
-
-        elif choix == '6':
             ui.delete_menu(my_fleet)
 
+        elif choix == '6':
+            ui.show_single_vehicle_details(my_fleet)
+
+
         elif choix == '7':
+            ui.statistics_menu(my_fleet)
+
+        elif choix == '8':
             storage.save_fleet(my_fleet)
             print("👋 Au revoir !")
             break

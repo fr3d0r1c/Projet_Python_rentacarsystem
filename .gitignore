@@ -1,6 +1,16 @@
-**/__pycache__/
+.venv/
+venv/
+env/
 
-GestionFlotte/ma_flotte.json
+__pycache__/
+*.py[cod]
+
+data.json
+ma_flotte.json
+
+.streamlit/secrets.toml
 
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/

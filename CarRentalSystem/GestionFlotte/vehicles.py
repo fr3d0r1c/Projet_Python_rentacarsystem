@@ -1,5 +1,5 @@
-from transport_base import MotorizedVehicle, TowedVehicle
-from animals import Horse, Donkey
+from .transport_base import MotorizedVehicle, TowedVehicle
+from .animals import Horse, Donkey
 
 # --- TERRE ---
 class Car(MotorizedVehicle):
