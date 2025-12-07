@@ -104,6 +104,7 @@ THEMES = {
     }
 }
 
+# 3. Injection du CSS (CORRECTIF VISIBILITÉ EXPANDER)
 def apply_theme(theme_name):
     t = THEMES[theme_name]
 
@@ -131,105 +132,72 @@ def apply_theme(theme_name):
         }}
 
         /* ============================================= */
-        /* ZONE CRITIQUE : STYLES GÉNÉRAUX INPUTS     */
+        /* CORRECTIF SPÉCIAL : EXPANDER (TITRE)         */
         /* ============================================= */
-        
-        /* Champs Texte & Nombre */
-        .stTextInput > div > div > input, 
-        .stNumberInput > div > div > input {{
+
+        /* 1. La boîte globale (Details) */
+        details[data-testid="stExpander"] {{
             background-color: {t['card_bg']} !important;
-            color: {t['text_color']} !important;
             border: 1px solid {t['border_color']} !important;
             border-radius: 8px;
+            color: {t['text_color']} !important;
         }}
 
-        /* Menus Déroulants (Fermés) */
+        /* 2. LA BARRE DE TITRE (Summary) - C'est ici le problème */
+        summary[data-testid="stExpanderDetails"] {{
+            background-color: {t['card_bg']} !important; /* Force le fond blanc même ouvert */
+            border-radius: 8px; /* Garde les coins ronds */
+            color: {t['text_color']} !important; /* Force le texte foncé */
+        }}
+
+        /* 3. L'icône (Flèche) */
+        summary[data-testid="stExpanderDetails"] svg {{
+            fill: {t['text_color']} !important;
+        }}
+
+        /* 4. Effet au survol du titre */
+        summary[data-testid="stExpanderDetails"]:hover {{
+            color: {t['accent']} !important;
+        }}
+        summary[data-testid="stExpanderDetails"]:hover svg {{
+            fill: {t['accent']} !important;
+        }}
+
+        /* 5. Le contenu intérieur */
+        details[data-testid="stExpander"] > div {{
+            color: {t['text_color']} !important;
+        }}
+
+        /* ============================================= */
+        /* INPUTS & LABELS (Rappel des fix précédents)   */
+        /* ============================================= */
+        
+        .stTextInput > div > div > input, 
+        .stNumberInput > div > div > input,
         div[data-baseweb="select"] > div {{
             background-color: {t['card_bg']} !important;
             color: {t['text_color']} !important;
             border: 1px solid {t['border_color']} !important;
-            border-radius: 8px;
         }}
-        div[data-baseweb="select"] span {{
-            color: {t['text_color']} !important;
-        }}
-        div[data-baseweb="select"] svg {{
-            fill: {t['text_color']} !important;
-        }}
-
-        /* Labels Généraux */
+        
         div[data-testid="stWidgetLabel"] p, label p {{
             color: {t['text_color']} !important;
             font-weight: 600;
         }}
-
-        /* ============================================= */
-        /* CORRECTIF SPÉCIAL : EXPANDER (FILTRES)     */
-        /* ============================================= */
-
-        /* 1. Le conteneur global de l'expander */
-        div[data-testid="stExpander"] {{
-            background-color: {t['card_bg']} !important;
-            border: 1px solid {t['border_color']} !important;
-            border-radius: 8px;
-            color: {t['text_color']} !important;
-        }}
-
-        /* 2. Le titre cliquable ("Filtres & Recherche") */
-        div[data-testid="stExpander"] summary p {{
-            color: {t['text_color']} !important;
-            font-weight: 700;
-        }}
-        div[data-testid="stExpander"] summary svg {{
-            fill: {t['text_color']} !important;
-        }}
-
-        /* 3. LES LABELS À L'INTÉRIEUR ("Recherche textuelle", "Environnement") */
-        /* On force la couleur pour tout texte <p> dans un widget label DANS un expander */
-        div[data-testid="stExpander"] div[data-testid="stWidgetLabel"] p {{
-            color: {t['text_color']} !important;
-            font-weight: 600;
-            opacity: 1 !important;
-        }}
-
-        /* 4. LE PLACEHOLDER ("Ex: Dragon...") */
-        /* C'est souvent lui qui est invisible (blanc sur blanc) */
-        div[data-testid="stExpander"] input::placeholder {{
-            color: {t['text_color']} !important;
-            opacity: 0.6 !important;
-            -webkit-text-fill-color: {t['text_color']} !important; /* Force pour Chrome/Safari */
-        }}
         
-        /* 5. LE TEXTE TAPÉ DANS L'INPUT DANS L'EXPANDER */
-        div[data-testid="stExpander"] input {{
+        /* Placeholder spécifique Expander */
+        details[data-testid="stExpander"] input::placeholder {{
             color: {t['text_color']} !important;
+            opacity: 0.7 !important;
+            -webkit-text-fill-color: {t['text_color']} !important;
         }}
 
-        /* ============================================= */
-        /* CORRECTIF MENU DÉROULANT            */
-        /* ============================================= */
-        
-        /* Liste des options (Popup) */
-        ul[data-testid="stSelectboxVirtualDropdown"] {{
-            background-color: {t['card_bg']} !important;
-        }}
-        li[role="option"] {{
-            background-color: {t['card_bg']} !important;
-            color: {t['text_color']} !important;
-        }}
-        li[role="option"] span {{
-            color: {t['text_color']} !important;
-        }}
-        /* Survol */
-        li[role="option"]:hover, li[role="option"][aria-selected="true"] {{
-            background-color: {t['sec_bg_color']} !important;
-            color: {t['accent']} !important;
-        }}
-        li[role="option"]:hover span {{
-            color: {t['accent']} !important;
-        }}
+        /* --- MENUS DÉROULANTS (POPUP) --- */
+        ul[data-testid="stSelectboxVirtualDropdown"] {{ background-color: {t['card_bg']} !important; }}
+        li[role="option"] {{ background-color: {t['card_bg']} !important; color: {t['text_color']} !important; }}
+        li[role="option"]:hover {{ background-color: {t['sec_bg_color']} !important; color: {t['accent']} !important; }}
 
-        /* --- AUTRES ELEMENTS --- */
+        /* --- CARDS & METRICS --- */
         div[data-testid="stMetric"], div[data-testid="stVerticalBlockBorderWrapper"] > div {{
             background-color: {t['card_bg']};
             border: 1px solid {t['border_color']};
@@ -237,14 +205,15 @@ def apply_theme(theme_name):
         }}
         div[data-testid="stMetricLabel"] p {{ color: {t['text_color']}; opacity: 0.7; }}
         div[data-testid="stMetricValue"] div {{ color: {t['text_color']}; }}
-        
-        /* Tabs */
+
+        /* --- TABS --- */
         button[data-baseweb="tab"] {{ background-color: transparent !important; color: {t['text_color']} !important; }}
         button[data-baseweb="tab"][aria-selected="true"] {{ color: {t['accent']} !important; border-bottom-color: {t['accent']} !important; }}
-        
-        /* Boutons */
+
+        /* --- BOUTONS --- */
         div.stButton > button {{ background-color: {t['accent']}; color: #FFFFFF !important; border-radius: 8px; border: none; font-weight: bold; }}
         
+        /* --- ELEMENTS PERSO --- */
         .client-avatar {{ border: 3px solid {t['accent']}; }}
         .price-tag {{ color: {t['text_color']}; }}
         .badge {{ padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; display: inline-block; margin-bottom: 8px; }}
