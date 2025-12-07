@@ -5,11 +5,20 @@
             "id": 1,
             "daily_rate": 50.0,
             "status": "Disponible",
-            "maintenance_log": [],
+            "maintenance_log": [
+                {
+                    "id": 1,
+                    "date": "2025-12-07",
+                    "type": "Contrôle Mécanique",
+                    "cost": 50.0,
+                    "description": "",
+                    "duration": 1.0
+                }
+            ],
             "brand": "Toyota",
-            "model": "AA-123-BB",
-            "license_plate": "Yaris",
-            "year": 2025,
+            "model": "Yaris",
+            "license_plate": "AA-123-BB",
+            "year": 2024,
             "door_count": 5,
             "has_ac": true
         }
@@ -17,11 +26,21 @@
     "customers": [
         {
             "id": 1,
-            "name": "Alleron Frédéric",
+            "name": "Darwiche Ahmad",
             "driver_license": "12345",
-            "email": "falleron.ira2028@esaip.org",
-            "phone": "0771689357"
+            "email": "",
+            "phone": ""
         }
     ],
-    "rentals": []
+    "rentals": [
+        {
+            "id": 1,
+            "vehicle_id": 1,
+            "customer_id": 1,
+            "start_date": "2025-12-07",
+            "end_date": "2025-12-17",
+            "total_price": 500.0,
+            "is_active": false
+        }
+    ]
 }
