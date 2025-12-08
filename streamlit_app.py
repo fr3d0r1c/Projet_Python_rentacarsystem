@@ -81,6 +81,56 @@ DEFAULT_DURATIONS = {
     MaintenanceType.SCALE_POLISHING: 0.5
 }
 
+# --- 📚 CATALOGUE DE RÉFÉRENCE (MARQUES / MODÈLES / RACES) ---
+CATALOG = {
+    # TERRE MOTEUR
+    "Voiture": {
+        "Peugeot": ["208", "308", "3008", "508"],
+        "Renault": ["Clio", "Megane", "Captur", "Austral"],
+        "Tesla": ["Model 3", "Model Y", "Model S", "Cybertruck"],
+        "Ferrari": ["F8 Tributo", "Roma", "SF90"],
+        "Toyota": ["Yaris", "Corolla", "RAV4"]
+    },
+    "Camion": {
+        "Volvo": ["FH16", "FM", "FMX"],
+        "Renault Trucks": ["T High", "K Series"],
+        "Mercedes-Benz": ["Actros", "Arocs"]
+    },
+    "Moto": {
+        "Yamaha": ["MT-07", "TMAX", "R1"],
+        "Harley-Davidson": ["Sportster", "Fat Bob", "Iron 883"],
+        "Kawasaki": ["Z900", "Ninja"]
+    },
+    # MER
+    "Bateau": {
+        "Beneteau": ["Oceanis 40", "Flyer 8"],
+        "Zodiac": ["Medline", "Pro Open"],
+        "Riva": ["Aquarama", "Iseo"]
+    },
+    "Sous-Marin": {
+        "Naval Group": ["Suffren", "Scorpene"],
+        "US Navy": ["Virginia Class", "Seawolf"],
+        "Comex": ["Remora 2000"]
+    },
+    # AIR
+    "Avion": {
+        "Boeing": ["747", "737 MAX", "777"],
+        "Airbus": ["A320", "A380", "A350"],
+        "Cessna": ["172 Skyhawk", "Citation"]
+    },
+    "Hélicoptère": {
+        "Airbus": ["H160", "H145", "Ecureuil"],
+        "Bell": ["206 JetRanger", "429"]
+    },
+    # ANIMAUX (Listes simples)
+    "Cheval": ["Shetland", "Pur-Sang Arabe", "Frison", "Percheron", "Mustang", "Selle Français"],
+    "Âne": ["Âne du Poitou", "Âne de Provence", "Âne des Pyrénées", "Grand Noir du Berry"],
+    "Dragon": ["Rouge de Feu", "Noir des Abysses", "Vert des Forêts", "Doré Impérial", "Blanc des Glaces"],
+    "Aigle": ["Aigle Royal", "Aigle Géant de Manwë", "Pygargue"],
+    "Baleine": ["Baleine Bleue", "Cachalot", "Baleine à Bosse"],
+    "Dauphin": ["Grand Dauphin", "Orque", "Dauphin Bleu"]
+}
+
 THEMES = {
     "☀️ Clair (Rent-A-Car)": {
         "bg_color": "#F2F5F9",
@@ -531,213 +581,248 @@ elif selected == "Dashboard":
     k3.metric("Clients", len(system.customers))
 
 elif selected == "Gestion Flotte":
-    if st.session_state.user_role != "admin": st.error("Accès Admin requis."); st.stop()
-    st.title("⚙️ Administration du Parc")
-    
-    # Sous-menu local pour ne pas surcharger la page
-    sub_action = st.radio("Action requise :", ["✨ Ajouter un élément", "🗑️ Retirer un élément"], horizontal=True)
-    st.markdown("---")
+    st.title("🚜 Gestion du Parc")
 
-    # -----------------------------------------------------
-    # 1. AJOUTER UN VÉHICULE OU ANIMAL
-    # -----------------------------------------------------
-    if sub_action == "✨ Ajouter un élément":
+    tab_add, tab_del, tab_harness = st.tabs(["➕ Ajouter", "🗑️ Supprimer", "🐴 Atteler (Attelages)"])
+
+    with tab_add:
         st.subheader("Nouvelle Acquisition")
-        
-        # A. FILTRES DE SÉLECTION
-        c_filter1, c_filter2, c_filter3 = st.columns(3)
-        
-        # 1. Nature (Machine vs Vivant)
-        nature = c_filter1.radio("Nature", ["🏎️ Véhicule / Machine", "🐉 Animal Vivant"], label_visibility="collapsed")
-        
-        # 2. Environnement
-        env = c_filter2.selectbox("Environnement", ["Terre", "Mer", "Air"])
-        
-        # 3. Type précis (Dynamique)
-        type_options = []
-        if nature == "🏎️ Véhicule / Machine":
-            if env == "Terre": type_options = ["Voiture", "Camion", "Moto", "Corbillard", "Karting", "Calèche", "Charrette"]
-            elif env == "Mer": type_options = ["Bateau", "Sous-Marin"]
-            elif env == "Air": type_options = ["Avion", "Hélicoptère"]
-        else: # Animal
-            if env == "Terre": type_options = ["Cheval", "Âne", "Chameau"]
-            elif env == "Mer": type_options = ["Baleine", "Dauphin"]
-            elif env == "Air": type_options = ["Aigle", "Dragon"]
+        st.caption("Sélectionnez l'environnement et le type pour voir les options.")
 
-        v_type = c_filter3.selectbox("Type d'élément", type_options)
-        
-        # Prix par défaut intelligent
+        col_env, col_type = st.columns(2)
+        env = col_env.selectbox("Environnement", ["Terre", "Mer", "Air"], index=0)
+
+        if env == "Terre": 
+            type_options = ["Voiture", "Camion", "Moto", "Corbillard", "Karting", "Cheval", "Âne", "Chameau", "Calèche", "Charrette"]
+        elif env == "Mer": 
+            type_options = ["Bateau", "Sous-Marin", "Baleine", "Dauphin"]
+        else: 
+            type_options = ["Avion", "Hélicoptère", "Aigle", "Dragon"]
+
+        v_type = col_type.selectbox("Type d'élément", type_options)
+
         default_price = PRICE_MAP.get(v_type, 50.0)
 
-        # B. FORMULAIRE
-        with st.form("admin_add_form"):
-            st.info(f"Configuration : **{v_type}** ({env})")
-            c1, c2 = st.columns(2)
-            
-            # Champ commun : Tarif
-            rate = c1.number_input("Tarif Journalier (€)", value=default_price, step=10.0)
-            
-            # --- LOGIQUE VÉHICULES ---
-            if nature == "🏎️ Véhicule / Machine":
-                if v_type not in ["Calèche", "Charrette"]:
-                    # Labels dynamiques
-                    lbl_id = "Plaque"
-                    if v_type in ["Bateau", "Sous-Marin"]: lbl_id = "N° Coque / Nom"
-                    if v_type == "Avion": lbl_id = "Immatriculation (F-XXXX)"
-                    if v_type == "Karting": lbl_id = "N° Kart"
+        st.markdown("---")
 
-                    brand = c1.text_input("Marque / Constructeur")
-                    model = c2.text_input("Modèle")
-                    plate = c1.text_input(lbl_id)
-                    year = c2.number_input("Année", value=2024, step=1)
+        c1, c2 = st.columns(2)
 
-                    # Spécifiques Moteurs
-                    c_spec1, c_spec2 = st.columns(2)
-                    arg_a = 0; arg_b = False; arg_c = ""
+        brand_val, model_val = "", ""
 
-                    if v_type == "Voiture":
-                        arg_a = c_spec1.number_input("Nb Portes", 3, 5, 5)
-                        arg_b = c_spec2.checkbox("Climatisation ?", True)
-                    elif v_type == "Camion":
-                        arg_a = c_spec1.number_input("Volume (m3)", value=20.0)
-                        arg_c = c_spec2.number_input("Poids Max (T)", value=10.0)
-                    elif v_type == "Moto":
-                        arg_a = c_spec1.number_input("Cylindrée (cc)", value=500)
-                        arg_b = c_spec2.checkbox("TopCase ?", False)
-                    elif v_type == "Sous-Marin":
-                        arg_a = c_spec1.number_input("Prof. Max (m)", value=500.0)
-                        arg_b = c_spec2.checkbox("Propulsion Nucléaire ?", True)
-                    # (Ajoutez ici les autres types si nécessaire : Avion, Hélico, Bateau...)
-                    elif v_type == "Avion":
-                        arg_a = c_spec1.number_input("Envergure (m)", value=15.0)
-                        arg_c = c_spec2.number_input("Nb Moteurs", 1, 4, 1)
-                    elif v_type == "Hélicoptère":
-                        arg_a = c_spec1.number_input("Nb Pales", 2, 8, 4)
-                        arg_c = c_spec2.number_input("Alt. Max (m)", value=3000)
-                    elif v_type == "Bateau":
-                        arg_a = c_spec1.number_input("Longueur (m)", value=10.0)
-                        arg_c = c_spec2.number_input("Puissance (cv)", value=150.0)
-                    elif v_type == "Corbillard":
-                        arg_a = c_spec1.number_input("Long. Cercueil (m)", value=2.2)
-                        arg_b = c_spec2.checkbox("Réfrigéré ?", True)
-                    elif v_type == "Karting":
-                        arg_c = c_spec1.text_input("Moteur", "4T Honda")
-                        arg_b = c_spec2.checkbox("Indoor ?", True)
+        if v_type in CATALOG and isinstance(CATALOG[v_type], dict):
+            brands_list = sorted(list(CATALOG[v_type].keys())) + ["➕ Autre (Manuel)"]
 
-                # Cas Attelages
-                else:
-                    seats = c1.number_input("Nb Places", 1, 10, 2)
-                    c_spec1, c_spec2 = st.columns(2)
-                    arg_a = 0; arg_b = False
-                    if v_type == "Calèche": arg_b = c_spec1.checkbox("Toit ?", True)
-                    elif v_type == "Charrette": arg_a = c_spec1.number_input("Charge Max (kg)", value=200.0)
+            selected_brand = c1.selectbox(f"Marque ({v_type})", brands_list)
 
-            # --- LOGIQUE ANIMAUX ---
+            if selected_brand == "➕ Autre (Manuel)":
+                brand_val = c1.text_input("Saisir la marque manuellement")
+                model_val = c2.text_input("Saisir le modèle")
             else:
-                name = c1.text_input("Nom")
-                breed = c2.text_input("Race / Espèce")
-                age = c1.number_input("Âge (ans)", 1, 500, 5)
-                
-                c_spec1, c_spec2 = st.columns(2)
-                arg_a = 0; arg_b = False; arg_c = 0
+                brand_val = selected_brand
+                models_list = sorted(CATALOG[v_type][selected_brand]) + ["➕ Autre (Manuel)"]
+                selected_model = c2.selectbox(f"Modèle ({brand_val})", models_list)
 
-                if v_type == "Cheval":
-                    arg_a = c_spec1.number_input("Taille (cm)", value=160)
-                    arg_c = c_spec2.number_input("Fers (mm)", value=100)
-                elif v_type == "Dragon":
-                    arg_a = c_spec1.number_input("Portée Feu (m)", value=100.0)
-                    arg_c = c_spec2.text_input("Couleur", "Rouge")
-                elif v_type == "Âne":
-                    arg_a = c_spec1.number_input("Capacité (kg)", value=50.0)
-                    arg_b = c_spec2.checkbox("Têtu ?", True)
-                # (Ajoutez les autres animaux ici : Baleine, Aigle...)
-                elif v_type == "Aigle":
-                    arg_a = c_spec1.number_input("Envergure (cm)", value=200)
-                    arg_c = c_spec2.number_input("Alt. Max (m)", value=2000)
-                elif v_type == "Baleine":
-                    arg_a = c_spec1.number_input("Poids (T)", value=100.0)
-                    arg_b = c_spec2.checkbox("Chante ?", True)
-                elif v_type == "Dauphin":
-                    arg_a = c_spec1.number_input("Vitesse (km/h)", value=40.0)
-                    arg_b = c_spec2.checkbox("Connaît des tours ?", True)
-                elif v_type == "Chameau":
-                    arg_a = c_spec1.number_input("Nb Bosses", 1, 2, 2)
-                    arg_c = c_spec2.number_input("Eau (L)", value=100.0)
-
-            # --- VALIDATION ---
-            if st.form_submit_button("💾 Enregistrer dans le parc", type="primary"):
-                # Calcul ID
-                new_id = 1 if not system.fleet else max(v.id for v in system.fleet) + 1
-                obj = None
-
-                # Instanciation (Mapping)
-                if v_type == "Voiture": obj = Car(new_id, rate, brand, model, plate, year, arg_a, arg_b)
-                elif v_type == "Camion": obj = Truck(new_id, rate, brand, model, plate, year, arg_a, arg_c)
-                elif v_type == "Moto": obj = Motorcycle(new_id, rate, brand, model, plate, year, arg_a, arg_b)
-                elif v_type == "Sous-Marin": obj = Submarine(new_id, rate, brand, model, plate, year, arg_a, arg_b)
-                elif v_type == "Bateau": obj = Boat(new_id, rate, brand, model, plate, year, arg_a, arg_c)
-                elif v_type == "Avion": obj = Plane(new_id, rate, brand, model, plate, year, arg_a, int(arg_c))
-                elif v_type == "Hélicoptère": obj = Helicopter(new_id, rate, brand, model, plate, year, int(arg_a), int(arg_c))
-                elif v_type == "Corbillard": obj = Hearse(new_id, rate, brand, model, plate, year, arg_a, arg_b)
-                elif v_type == "Karting": obj = GoKart(new_id, rate, brand, model, plate, year, arg_c, arg_b)
-                
-                elif v_type == "Cheval": obj = Horse(new_id, rate, name, breed, age, arg_a, arg_c, arg_c)
-                elif v_type == "Dragon": obj = Dragon(new_id, rate, name, breed, age, arg_a, arg_c)
-                elif v_type == "Âne": obj = Donkey(new_id, rate, name, breed, age, arg_a, arg_b)
-                elif v_type == "Aigle": obj = Eagle(new_id, rate, name, breed, age, arg_a, int(arg_c))
-                elif v_type == "Baleine": obj = Whale(new_id, rate, name, breed, age, arg_a, arg_b)
-                elif v_type == "Dauphin": obj = Dolphin(new_id, rate, name, breed, age, arg_a, arg_b)
-                elif v_type == "Chameau": obj = Camel(new_id, rate, name, breed, age, arg_a, arg_c)
-                
-                elif v_type == "Calèche": obj = Carriage(new_id, rate, seats, arg_b)
-                elif v_type == "Charrette": obj = Cart(new_id, rate, seats, arg_a)
-
-                if obj:
-                    system.add_vehicle(obj)
-                    save_data()
-                    
-                    # Animation Lottie (Si disponible)
-                    anim_name = "Voiture" if nature.startswith("🏎️") else "Dragon" # Simple fallback
-                    # Essai de trouver l'anim précise
-                    if v_type in st.session_state.lottie_cache:
-                        st_lottie(st.session_state.lottie_cache[v_type], height=200, key=f"anim_{new_id}")
-                    elif "default" in st.session_state.lottie_cache:
-                        st_lottie(st.session_state.lottie_cache["default"], height=200, key=f"anim_{new_id}")
-                    
-                    st.success(f"✅ **{v_type}** ajouté avec succès !")
-                    time.sleep(1.5)
-                    st.rerun()
+                if selected_model == "➕ Autre (Manuel)":
+                    model_val = c2.text_input("Saisir le modèle manuellement")
                 else:
-                    st.error("Erreur technique : Type non reconnu.")
+                    model_val = selected_model
 
-    # -----------------------------------------------------
-    # 2. SUPPRIMER UN ÉLÉMENT
-    # -----------------------------------------------------
-    elif sub_action == "🗑️ Retirer un élément":
-        st.subheader("Sortie d'inventaire")
-        
+        elif v_type in CATALOG and isinstance(CATALOG[v_type], list):
+            brand_val = c1.text_input("Nom de l'animal")
+
+            races_list = sorted(CATALOG[v_type]) + ["➕ Autre (Manuel)"]
+            selected_race = c2.selectbox(f"Race / Espèce ({v_type})", races_list)
+
+            if selected_race == "➕ Autre (Manuel)":
+                model_val = c2.text_input("Saisir la race")
+            else:
+                model_val = selected_race
+
+        else:
+            if v_type in ["Calèche", "Charrette"]:
+                pass
+            else:
+                lbl_b = "Marque / Constructeur"
+                lbl_m = "Modèle"
+                brand_val = c1.text_input(lbl_b)
+                model_val = c2.text_input(lbl_m)
+
+        rate = st.number_input("Tarif Journalier (€)", value=default_price, step=5.0)
+
+        plate, year, age = "", 2024, 5
+        arg_a, arg_b, arg_c = 0, False, ""
+
+        if v_type in ["Voiture", "Camion", "Moto", "Corbillard", "Karting", "Bateau", "Sous-Marin", "Avion", "Hélicoptère"]:
+            lbl_id = "Plaque"
+            if v_type in ["Bateau", "Sous-Marin"]: lbl_id = "Nom du Vaisseau / Coque"
+            if v_type == "Avion": lbl_id = "Immatriculation (F-XXXX)"
+
+            c3, c4 = st.columns(2)
+            plate = c3.text_input(lbl_id)
+            year = c4.number_input("Année", value=2024, step=1)
+
+            c_spec1, c_spec2 = st.columns(2)
+
+            if v_type == "Voiture":
+                arg_a = c_spec1.number_input("Portes", 3, 5, 5)
+                arg_b = c_spec2.checkbox("Clim ?", True)
+            elif v_type == "Camion":
+                arg_a = c_spec1.number_input("Volume (m3)", 20.0)
+                arg_c = c_spec2.number_input("Poids (T)", 10.0)
+            elif v_type == "Moto":
+                arg_a = c_spec1.number_input("Cylindrée", 500)
+                arg_b = c_spec2.checkbox("TopCase ?", False)
+            elif v_type == "Sous-Marin":
+                arg_a = c_spec1.number_input("Profondeur", 500.0)
+                arg_b = c_spec2.checkbox("Nucléaire ?", True)
+            elif v_type == "Avion":
+                arg_a = c_spec1.number_input("Envergure", 15.0)
+                arg_c = c_spec2.number_input("Moteurs", 1)
+            elif v_type == "Hélicoptère":
+                arg_a = c_spec1.number_input("Pales", 2)
+                arg_c = c_spec2.number_input("Alt. Max", 3000)
+            elif v_type == "Bateau":
+                arg_a = c_spec1.number_input("Longueur", 10.0)
+                arg_c = c_spec2.number_input("CV", 150.0)
+            elif v_type == "Karting":
+                arg_c = c_spec1.text_input("Moteur", "4T")
+                arg_b = c_spec2.checkbox("Indoor ?", True)
+            elif v_type == "Corbillard":
+                arg_a = c_spec1.number_input("Longueur (m)", 2.2)
+                arg_b = c_spec2.checkbox("Frigo ?", True)
+
+        elif v_type in ["Cheval", "Âne", "Chameau", "Baleine", "Dauphin", "Aigle", "Dragon"]:
+            age = st.number_input("Âge", 1, 500, 5)
+
+            c_spec1, c_spec2 = st.columns(2)
+            if v_type == "Dragon":
+                arg_a = c_spec1.number_input("Portée Feu (m)", 100.0)
+                arg_c = c_spec2.text_input("Couleur", "Rouge")
+            elif v_type == "Cheval":
+                arg_a = c_spec1.number_input("Taille (cm)", 160)
+                arg_c = c_spec2.number_input("Fers (mm)", 100)
+            elif v_type == "Âne":
+                arg_a = c_spec1.number_input("Charge (kg)", 50.0)
+                arg_b = c_spec2.checkbox("Têtu ?", True)
+            elif v_type == "Chameau":
+                arg_a = c_spec1.number_input("Bosses", 1, 2, 2)
+                arg_c = c_spec2.number_input("Eau (L)", 100.0)
+            elif v_type == "Baleine":
+                arg_a = c_spec1.number_input("Poids (T)", 100.0)
+                arg_b = c_spec2.checkbox("Chante ?", True)
+            elif v_type == "Dauphin":
+                arg_a = c_spec1.number_input("Vitesse", 40.0)
+                arg_b = c_spec2.checkbox("Tours ?", True)
+            elif v_type == "Aigle":
+                arg_a = c_spec1.number_input("Envergure (cm)", 220)
+                arg_c = c_spec2.number_input("Alt Max", 2000)
+
+        elif v_type in ["Calèche", "Charrette"]:
+            seats = st.number_input("Places", 2)
+            c_spec1, c_spec2 = st.columns(2)
+            if v_type == "Calèche": arg_b = c_spec1.checkbox("Toit ?", True)
+            else: arg_a = c_spec1.number_input("Charge Max", 200.0)
+
+        st.markdown("###")
+
+        if st.button("💾 Créer et Ajouter au Parc", type="primary", use_container_width=True):
+            new_id = 1 if not system.fleet else max(v.id for v in system.fleet) + 1
+            obj = None
+
+            if v_type == "Voiture": obj = Car(new_id, rate, brand_val, model_val, plate, year, int(arg_a), arg_b)
+            elif v_type == "Camion": obj = Truck(new_id, rate, brand_val, model_val, plate, year, float(arg_a), float(arg_c))
+            elif v_type == "Moto": obj = Motorcycle(new_id, rate, brand_val, model_val, plate, year, int(arg_a), arg_b)
+            elif v_type == "Sous-Marin": obj = Submarine(new_id, rate, brand_val, model_val, plate, year, float(arg_a), arg_b)
+            elif v_type == "Bateau": obj = Boat(new_id, rate, brand_val, model_val, plate, year, float(arg_a), float(arg_c))
+            elif v_type == "Avion": obj = Plane(new_id, rate, brand_val, model_val, plate, year, float(arg_a), int(arg_c))
+            elif v_type == "Hélicoptère": obj = Helicopter(new_id, rate, brand_val, model_val, plate, year, int(arg_a), int(arg_c))
+            elif v_type == "Corbillard": obj = Hearse(new_id, rate, brand_val, model_val, plate, year, float(arg_a), arg_b)
+            elif v_type == "Karting": obj = GoKart(new_id, rate, brand_val, model_val, plate, year, arg_c, arg_b)
+
+            elif v_type == "Cheval": obj = Horse(new_id, rate, brand_val, model_val, age, int(arg_a), int(arg_c), int(arg_c))
+            elif v_type == "Dragon": obj = Dragon(new_id, rate, brand_val, model_val, age, float(arg_a), arg_c)
+            elif v_type == "Âne": obj = Donkey(new_id, rate, brand_val, model_val, age, float(arg_a), arg_b)
+            elif v_type == "Chameau": obj = Camel(new_id, rate, brand_val, model_val, age, int(arg_a), float(arg_c))
+            elif v_type == "Baleine": obj = Whale(new_id, rate, brand_val, model_val, age, float(arg_a), arg_b)
+            elif v_type == "Dauphin": obj = Dolphin(new_id, rate, brand_val, model_val, age, float(arg_a), arg_b)
+            elif v_type == "Aigle": obj = Eagle(new_id, rate, brand_val, model_val, age, int(arg_a), int(arg_c))
+            
+            elif v_type == "Calèche": obj = Carriage(new_id, rate, int(seats), arg_b)
+            elif v_type == "Charrette": obj = Cart(new_id, rate, int(seats), float(arg_a))
+
+            if obj:
+                system.add_vehicle(obj)
+                save_data()
+
+                anim_name = "Voiture"
+                if v_type in ["Dragon", "Cheval"]: anim_name = v_type
+                lottie = st.session_state.lottie_cache.get(anim_name, st.session_state.lottie_cache.get("default"))
+                if lottie: st_lottie(lottie, height=150, key=f"anim_add_{new_id}")
+
+                st.success(f"✅ **{v_type}** ajouté avec succès !")
+                time.sleep(1.5)
+                st.rerun()
+
+    with tab_del:
+        st.subheader("Retirer un élément du parc")
         if not system.fleet:
             st.info("Le parc est vide.")
         else:
-            # Création d'une liste lisible pour la suppression
             del_opts = {}
             for v in system.fleet:
-                # Nom intelligent
-                nom = getattr(v, 'brand', getattr(v, 'name', 'Inconnu'))
-                model = getattr(v, 'model', getattr(v, 'breed', ''))
-                label = f"#{v.id} - {nom} {model} ({v.__class__.__name__})"
+                nom = getattr(v, 'brand', getattr(v, 'name', 'Element'))
+                label = f"#{v.id} - {nom} ({v.__class__.__name__})"
                 del_opts[label] = v
-
-            sel_del = st.selectbox("Sélectionner l'élément à supprimer", list(del_opts.keys()))
             
-            col_d1, col_d2 = st.columns([1, 4])
-            if col_d1.button("🗑️ Supprimer", type="primary"):
+            sel_del = st.selectbox("Sélectionner l'élément à supprimer", list(del_opts.keys()))
+
+            if st.button("🗑️ Confirmer la suppression", type="primary"):
                 obj_to_del = del_opts[sel_del]
                 system.fleet.remove(obj_to_del)
                 save_data()
                 st.success("Élément retiré du parc.")
                 time.sleep(1)
                 st.rerun()
+
+    with tab_harness:
+        st.subheader("Gestion des Attelages")
+
+        towed_list = [v for v in system.fleet if isinstance(v, TowedVehicle)]
+        anim_list = [a for a in system.fleet if isinstance(a, TransportAnimal)]
+
+        if not towed_list:
+            st.warning("Aucune Calèche ou Charrette disponible.")
+        elif not anim_list:
+            st.warning("Aucun animal disponible.")
+        else:
+            c1, c2 = st.columns(2)
+
+            towed_map = {f"#{v.id} {v.__class__.__name__} ({v.seat_count} pl.)": v for v in towed_list}
+            sel_towed = c1.selectbox("Véhicule", list(towed_map.keys()))
+            veh_obj = towed_map[sel_towed]
+
+            anim_map = {f"#{a.id} {a.name} ({a.__class__.__name__})": a for a in anim_list}
+            sel_anim = c2.selectbox("Animal", list(anim_map.keys()))
+            anim_obj = anim_map[sel_anim]
+
+            if st.button("🔗 Lier l'animal"):
+                error_msg = None
+                if isinstance(veh_obj, Carriage):
+                    if not isinstance(anim_obj, Horse) or anim_obj.wither_height < 140:
+                        error_msg = "❌ Calèche = Grand Cheval (>140cm) uniquement."
+                elif isinstance(veh_obj, Cart):
+                    if not isinstance(anim_obj, Donkey):
+                        error_msg = "❌ Charrette = Âne uniquement."
+
+                if error_msg:
+                    st.error(error_msg)
+                else:
+                    veh_obj.harness_animal(anim_obj)
+                    save_data()
+                    st.balloons()
+                    st.success(f"✅ {anim_obj.name} attelé !")
+                    time.sleep(1)
+                    st.rerun()
 
 elif selected == "Atelier":
     if st.session_state.user_role != "admin": st.error("Accès Admin requis."); st.stop()
