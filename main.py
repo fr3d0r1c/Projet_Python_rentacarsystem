@@ -24,8 +24,11 @@ console = Console()
 def main():
     system = CarRentalSystem()
     
-    storage = StorageManager("ma_flotte.json")
-    system.fleet = storage.load_fleet() 
+    storage = StorageManager("data.json")
+    system = storage.load_system()
+
+    if system is None:
+        system = CarRentalSystem()
     
     while True:
         console.clear()
@@ -90,8 +93,6 @@ def main():
             if Confirm.ask("Voulez-vous vraiment quitter ?"):
                 console.print("[bold blue]Au revoir ! 👋[/]")
                 sys.exit()
-
-# --- VUES SECONDAIRES ---
 
 def show_global_menu():
     text = """

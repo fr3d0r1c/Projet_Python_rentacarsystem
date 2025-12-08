@@ -171,54 +171,105 @@ def apply_theme(theme_name):
     css = f"""
     <style>
         @import url('{font_url}');
-        .stApp {{ background-color: {t['bg_color']}; color: {t['text_color']}; font-family: 'Poppins', sans-serif !important; }}
-        section[data-testid="stSidebar"] {{ background-color: {t['sec_bg_color']}; border-right: 1px solid {t['border_color']}; }}
-        section[data-testid="stSidebar"] * {{ color: {t['sidebar_text']} !important; }}
-        h1, h2, h3, h4 {{ color: {t['text_color']} !important; font-weight: 700 !important; letter-spacing: -0.5px; }}
+        .stApp {{
+            background-color: {t['bg_color']};
+            color: {t['text_color']};
+            font-family: 'Poppins', sans-serif;
+        }}
+        /* --- SIDEBAR --- */
+        section[data-testid="stSidebar"] {{
+            background-color: {t['sec_bg_color']};
+            border-right: 1px solid {t['border_color']};
+        }}
+        section[data-testid="stSidebar"] * {{
+            color: {t['sidebar_text']} !important;
+        }}
+        h1, h2, h3, h4 {{
+            color: {t['text_color']} !important;
+        }}
         
-        /* CARTES & CONTENEURS */
+        /* ================================================== */
+        /* CORRECTIF VISIBILITÉ TEXTE (INPUTS & SEARCH)       */
+        /* ================================================== */
+        
+        /* 1. La boîte de l'input */
+        .stTextInput > div > div, .stNumberInput > div > div {{
+            background-color: {t['card_bg']} !important;
+            border: 1px solid {t['border_color']} !important;
+            border-radius: 10px;
+        }}
+
+        /* 2. Le texte tapé à l'intérieur */
+        .stTextInput input, .stNumberInput input {{
+            color: {t['text_color']} !important;
+            -webkit-text-fill-color: {t['text_color']} !important; /* Force Chrome/Safari */
+            caret-color: {t['text_color']} !important; /* Couleur du curseur clignotant */
+        }}
+
+        /* 3. Le Placeholder (ex: "Rechercher...") */
+        .stTextInput input::placeholder {{
+            color: {t['text_color']} !important;
+            opacity: 0.5 !important;
+            -webkit-text-fill-color: {t['text_color']} !important;
+        }}
+
+        /* 4. Les Labels au-dessus */
+        div[data-testid="stWidgetLabel"] p, label p {{
+            color: {t['text_color']} !important;
+            font-weight: 600;
+        }}
+
+        /* --- SELECTBOX (Menu Déroulant) --- */
+        div[data-baseweb="select"] > div {{
+            background-color: {t['card_bg']} !important;
+            border: 1px solid {t['border_color']} !important;
+        }}
+        div[data-baseweb="select"] span {{
+            color: {t['text_color']} !important;
+        }}
+        /* Icône flèche */
+        div[data-baseweb="select"] svg {{
+            fill: {t['text_color']} !important;
+        }}
+
+        /* --- CARTES & CONTENEURS --- */
         div[data-testid="stMetric"], div[data-testid="stVerticalBlockBorderWrapper"] > div {{
-            background-color: {t['card_bg']}; border: 1px solid {t['border_color']};
-            border-radius: 16px !important; padding: 20px !important; box-shadow: {t['shadow']};
-            transition: all 0.3s ease;
+            background-color: {t['card_bg']};
+            border: 1px solid {t['border_color']};
+            border-radius: 16px;
+            box-shadow: {t['shadow']};
         }}
-        div[data-testid="stVerticalBlockBorderWrapper"] > div:hover {{ transform: translateY(-3px); border-color: {t['accent']} !important; }}
-        div[data-testid="stMetricValue"] div {{ color: {t['text_color']}; font-weight: 800; font-size: 2rem; }}
-        div[data-testid="stMetricLabel"] p {{ color: {t['text_color']}; opacity: 0.6; }}
+        div[data-testid="stMetricLabel"] p {{ color: {t['text_color']}; opacity: 0.7; }}
+        div[data-testid="stMetricValue"] div {{ color: {t['text_color']}; }}
 
-        /* INPUTS & SELECTBOX */
-        .stTextInput > div > div > input, .stNumberInput > div > div > input, div[data-baseweb="select"] > div {{
-            background-color: {t['bg_color']} !important; color: {t['text_color']} !important;
-            border: 1px solid {t['border_color']} !important; border-radius: 10px !important; height: 45px;
-        }}
-        
-        /* EXPANDER FIX */
-        details[data-testid="stExpander"] {{ background-color: {t['card_bg']} !important; border: 1px solid {t['border_color']} !important; border-radius: 12px; }}
-        summary[data-testid="stExpanderDetails"] {{ background-color: {t['bg_color']} !important; color: {t['text_color']} !important; font-weight: 600; }}
-        details[data-testid="stExpander"] input::placeholder {{ color: {t['text_color']} !important; opacity: 0.6; -webkit-text-fill-color: {t['text_color']} !important; }}
-        div[data-testid="stWidgetLabel"] p, label p {{ color: {t['text_color']} !important; font-weight: 600; }}
-
-        /* BOUTONS */
+        /* --- BOUTONS --- */
         div.stButton > button {{
             background: linear-gradient(135deg, {t['accent']} 0%, {t['accent']}DD 100%);
-            color: #FFFFFF !important; border: none; border-radius: 12px; font-weight: 600;
+            color: #FFFFFF !important;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+        }}
+
+        /* --- EXPANDER FIX (Encore une fois pour être sûr) --- */
+        details[data-testid="stExpander"] {{
+            background-color: {t['card_bg']} !important;
+            border: 1px solid {t['border_color']} !important;
+            color: {t['text_color']} !important;
+        }}
+        summary[data-testid="stExpanderDetails"] {{
+            color: {t['text_color']} !important;
+            background-color: {t['bg_color']} !important;
         }}
         
-        /* ALERTS */
-        div[data-testid="stAlert"] {{ background-color: {t['card_bg']} !important; color: {t['text_color']} !important; border: 1px solid {t['border_color']}; }}
-        div[data-testid="stAlert"] p {{ color: {t['text_color']} !important; }}
-        
-        /* POPUPS MENUS */
-        ul[data-testid="stSelectboxVirtualDropdown"] {{ background-color: {t['card_bg']} !important; }}
-        li[role="option"] {{ background-color: {t['card_bg']} !important; color: {t['text_color']} !important; }}
-        li[role="option"]:hover {{ background-color: {t['bg_color']} !important; color: {t['accent']} !important; }}
-
-        /* CUSTOM */
-        .client-avatar {{ border-radius: 50%; border: 3px solid {t['accent']}; width: 80px; height: 80px; object-fit: cover; display: block; margin: 0 auto; }}
-        .badge {{ padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; display: inline-block; margin-bottom: 10px; }}
-        .badge-green {{ background-color: #D1FAE5; color: #065F46; }}
-        .badge-yellow {{ background-color: #FEF3C7; color: #92400E; }}
-        .badge-red {{ background-color: #FEE2E2; color: #991B1B; }}
+        /* --- ELEMENTS PERSO --- */
+        .client-avatar {{ border: 3px solid {t['accent']}; }}
+        .price-tag {{ color: {t['text_color']}; }}
+        .badge {{ padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; display: inline-block; margin-bottom: 8px; }}
+        .badge-green {{ background-color: #D4EDDA; color: #155724; border: 1px solid #C3E6CB; }}
+        .badge-yellow {{ background-color: #FFF3CD; color: #856404; border: 1px solid #FFEEBA; }}
+        .badge-red {{ background-color: #F8D7DA; color: #721C24; border: 1px solid #F5C6CB; }}
+        .badge-grey {{ background-color: #E2E3E5; color: #383D41; border: 1px solid #D6D8DB; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -234,7 +285,7 @@ def load_lottiefile(filepath: str):
 if 'authenticated' not in st.session_state: st.session_state.authenticated = False
 if 'user_role' not in st.session_state: st.session_state.user_role = None
 if 'current_user' not in st.session_state: st.session_state.current_user = None
-if 'current_theme' not in st.session_state: st.session_state.current_theme = "☀️ Clair (Rent-A-Car)"
+if 'current_theme' not in st.session_state: st.session_state.current_theme = "🔥 Rouge & Noir (Dragon)"
 if 'show_login' not in st.session_state: st.session_state.show_login = False
 
 if 'system' not in st.session_state:
@@ -363,9 +414,27 @@ with st.sidebar:
 
     selected = option_menu(
         menu_title=None, options=menu_opts, icons=menu_icons, default_index=default_idx,
-        styles={"nav-link-selected": {"background-color": THEMES[st.session_state.current_theme]['accent'], "color": "#FFF"},
-                "container": {"background-color": THEMES[st.session_state.current_theme]['sec_bg_color']},
-                "nav-link": {"color": THEMES[st.session_state.current_theme]['sidebar_text']}}
+        styles={
+            "container": {
+            "padding": "0!important", 
+            "background-color": THEMES[st.session_state.current_theme]['sec_bg_color']
+            },
+            "icon": {
+            "color": THEMES[st.session_state.current_theme]['accent'], 
+            "font-size": "18px"
+        }, 
+        "nav-link": {
+            "font-size": "16px", 
+            "text-align": "left", 
+            "margin":"0px", 
+            # 👇 C'EST CETTE LIGNE QUI CORRIGE LA VISIBILITÉ DU TEXTE 👇
+            "color": THEMES[st.session_state.current_theme]['sidebar_text'] 
+        },
+        "nav-link-selected": {
+            "background-color": THEMES[st.session_state.current_theme]['accent'], 
+            "color": "#FFFFFF"
+        }
+        }
     )
     
     st.markdown("---")
