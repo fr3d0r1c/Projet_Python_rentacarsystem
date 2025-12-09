@@ -1,10 +1,10 @@
 import json
 from datetime import date
-from GestionFlotte.enums import VehicleStatus, MaintenanceType
-from GestionFlotte.maintenance import Maintenance
+from fleet.enums import VehicleStatus, MaintenanceType
+from fleet.maintenance import Maintenance
 # Import de TOUS les types
-from GestionFlotte.vehicles import Car, Truck, Motorcycle, Hearse, GoKart, Carriage, Cart, Boat, Plane, Helicopter, Submarine
-from GestionFlotte.animals import Horse, Donkey, Camel, Whale, Eagle, Dragon, Dolphin
+from fleet.vehicles import Car, Truck, Motorcycle, Hearse, GoKart, Carriage, Cart, Boat, Plane, Helicopter, Submarine
+from fleet.animals import Horse, Donkey, Camel, Whale, Eagle, Dragon, Dolphin
 from clients.customer import Customer
 from location.rental import Rental
 from location.system import CarRentalSystem

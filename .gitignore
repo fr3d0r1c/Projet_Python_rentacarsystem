@@ -8,7 +8,7 @@ __pycache__/
 data.json
 ma_flotte.json
 
-.streamlit/secrets.toml
+.streamlit/config.taml
 
 .DS_Store
 Thumbs.db

@@ -2,8 +2,8 @@ from datetime import date
 from typing import List, Optional, Type
 
 # Imports des modules voisins
-from GestionFlotte.transport_base import TransportMode
-from GestionFlotte.enums import VehicleStatus
+from fleet.transport_base import TransportMode
+from fleet.enums import VehicleStatus
 from clients.customer import Customer
 from .rental import Rental
 

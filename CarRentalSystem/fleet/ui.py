@@ -11,10 +11,10 @@ from rich.box import ROUNDED
 # Imports de vos classes
 from datetime import date
 # 👇 MODIFICATION DES IMPORTS
-from GestionFlotte.vehicles import Car, Truck, Motorcycle, Hearse, GoKart, Carriage, Cart, Boat, Plane, Helicopter, Submarine, MotorizedVehicle, TowedVehicle
-from GestionFlotte.animals import Horse, Donkey, Camel, Whale, Eagle, Dragon, Dolphin, TransportAnimal
-from GestionFlotte.maintenance import Maintenance
-from GestionFlotte.enums import MaintenanceType, VehicleStatus
+from fleet.vehicles import Car, Truck, Motorcycle, Hearse, GoKart, Carriage, Cart, Boat, Plane, Helicopter, Submarine, MotorizedVehicle, TowedVehicle
+from fleet.animals import Horse, Donkey, Camel, Whale, Eagle, Dragon, Dolphin, TransportAnimal
+from fleet.maintenance import Maintenance
+from fleet.enums import MaintenanceType, VehicleStatus
 
 # Initialisation de la console Rich
 console = Console()

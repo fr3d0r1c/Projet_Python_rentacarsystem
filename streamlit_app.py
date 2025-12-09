@@ -25,6 +25,7 @@ if project_folder not in sys.path:
     sys.path.append(project_folder)
 
 from location.system import CarRentalSystem
+from location.rental import Rental
 from storage import StorageManager
 from clients.customer import Customer
 from GestionFlotte.vehicles import *
@@ -278,6 +279,124 @@ def load_lottiefile(filepath: str):
     try:
         with open(filepath, "r", encoding='utf-8') as f: return json.load(f)
     except FileNotFoundError: return None
+
+def page_locations(system):
+    """Page de gestion des locations pour Streamlit."""
+    st.title("📝 Comptoir Locations")
+
+    # Création de 3 onglets pour organiser la page
+    tab_new, tab_return, tab_list = st.tabs(["🔑 Nouvelle Location", "↩️ Retour Véhicule", "📜 Contrats en cours"])
+
+    # --- ONGLET 1 : NOUVELLE LOCATION ---
+    with tab_new:
+        st.subheader("Ouvrir un nouveau dossier")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Sélection du Client (Affiche le nom, renvoie l'objet)
+            client_options = {f"{c.name} (ID: {c.id})": c for c in system.customers}
+            selected_client_name = st.selectbox("Client", options=list(client_options.keys()))
+            client = client_options.get(selected_client_name)
+
+        with col2:
+            # Sélection du Véhicule (Filtrer ceux qui sont disponibles ?)
+            # On affiche Marque Modèle et Prix
+            veh_options = {f"{v.brand} {v.model} ({v.daily_rate}€/j)": v for v in system.fleet}
+            selected_veh_name = st.selectbox("Véhicule", options=list(veh_options.keys()))
+            vehicle = veh_options.get(selected_veh_name)
+
+        # Sélection des dates
+        c_date1, c_date2 = st.columns(2)
+        d_start = c_date1.date_input("Date de début", value="today")
+        d_end = c_date2.date_input("Date de fin prévue", value="today")
+
+        if st.button("Valider la Location", type="primary"):
+            # IMPORTANT : Conversion des dates Streamlit (Date) -> String pour votre classe
+            s_str = d_start.strftime("%Y-%m-%d")
+            e_str = d_end.strftime("%Y-%m-%d")
+
+            try:
+                # 1. Création de l'objet Rental (La validation se fait ici)
+                new_rental = Rental(client, vehicle, s_str, e_str)
+                
+                # 2. Ajout au système
+                system.rentals.append(new_rental)
+                
+                # 3. Feedback visuel
+                st.success(f"Location validée pour {client.name} !")
+                
+                # Affichage joli du coût
+                cout = new_rental.calculate_cost()
+                st.metric(label="Coût Estimé (à payer au retour)", value=f"{cout} €")
+                
+                # Petit effet visuel : rafraîchir pour que le véhicule disparaisse de la liste dispo (optionnel)
+                # st.rerun() 
+
+            except ValueError as e:
+                st.error(f"Impossible de créer la location : {e}")
+
+    # --- ONGLET 2 : RETOUR VÉHICULE ---
+    with tab_return:
+        st.subheader("Clôturer un contrat")
+        
+        # On filtre pour n'avoir que les locations actives
+        active_rentals = [r for r in system.rentals if r.is_active]
+        
+        if not active_rentals:
+            st.info("Aucune location en cours.")
+        else:
+            # On crée un dictionnaire pour le selectbox
+            rental_opts = {f"{r.vehicle.model} - {r.customer.name} (Fin prévue : {r.end_date.date()})": r for r in active_rentals}
+            selected_rental_name = st.selectbox("Choisir le contrat à clôturer", options=list(rental_opts.keys()))
+            rental_to_close = rental_opts[selected_rental_name]
+
+            st.write("---")
+            st.write(f"**Véhicule :** {rental_to_close.vehicle.brand} {rental_to_close.vehicle.model}")
+            st.write(f"**Date prévue :** {rental_to_close.end_date.date()}")
+            
+            d_return = st.date_input("Date de retour réel", value="today")
+            
+            if st.button("Confirmer le Retour"):
+                ret_str = d_return.strftime("%Y-%m-%d")
+                try:
+                    # Appel de votre méthode close_rental
+                    final_price = rental_to_close.close_rental(ret_str)
+                    
+                    st.balloons() # Petit effet festif
+                    st.success("Véhicule retourné avec succès !")
+                    
+                    # Affichage du prix final avec gestion pénalité
+                    col_p1, col_p2 = st.columns(2)
+                    col_p1.metric("Montant Final", f"{final_price} €")
+                    
+                    if rental_to_close.penalty > 0:
+                        col_p2.error(f"⚠️ Dont Pénalité : {rental_to_close.penalty} €")
+                    else:
+                        col_p2.success("Aucune pénalité")
+
+                except ValueError as e:
+                    st.error(f"Erreur : {e}")
+
+    # --- ONGLET 3 : LISTE ---
+    with tab_list:
+        st.subheader("Historique des Contrats")
+        if not system.rentals:
+            st.write("Vide.")
+        else:
+            # On peut utiliser un DataFrame pour un affichage propre
+            data = []
+            for r in system.rentals:
+                status = "🟢 En cours" if r.is_active else "🔴 Terminé"
+                data.append({
+                    "Statut": status,
+                    "Client": r.customer.name,
+                    "Véhicule": r.vehicle.model,
+                    "Début": r.start_date.date(),
+                    "Fin Prévue": r.end_date.date(),
+                    "Coût": f"{r.total_cost} €" if not r.is_active else "En cours"
+                })
+            st.dataframe(data)
 
 # =========================================================
 # 3. INITIALISATION SESSION
@@ -593,51 +712,143 @@ elif selected == "Catalogue Public":
                             st.button("Indisponible", key=unique_key, disabled=True)
 
 # --- 2. PAGES CLIENT (SÉCURISÉES) ---
-
 elif selected == "Louer un véhicule":
     if st.session_state.user_role != "client": st.error("Accès réservé aux clients."); st.stop()
-    
+
     me = st.session_state.current_user
     st.title(f"Nouvelle Réservation pour {me.name}")
-    # ... (Copiez ici le contenu complet de "Louer un véhicule" de la version précédente) ...
-    # Pour rappel, c'est le bloc avec les filtres, la sélection et la validation.
-    # Je remets le code essentiel pour que ça marche :
+
     c1, c2 = st.columns([3, 1])
-    search = c1.text_input("Recherche...")
-    env = c2.selectbox("Filtrer", ["Tout", "Terre", "Mer", "Air"])
+    search = c1.text_input("Recherche...", placeholder="Modèle, Marque...")
+    env = c2.selectbox("Filtrer par type", ["Tout", "Terre", "Mer", "Air"])
+
     available = [v for v in system.fleet if v.status == VehicleStatus.AVAILABLE]
-    if env == "Terre": available = [v for v in available if isinstance(v, (Car, Truck, Motorcycle, Horse, Donkey, Carriage))]
-    elif env == "Mer": available = [v for v in available if isinstance(v, (Boat, Submarine, Whale))]
-    elif env == "Air": available = [v for v in available if isinstance(v, (Plane, Dragon, Eagle))]
+
+    if env == "Terre": available = [v for v in available if isinstance(v, (Car, Truck, Motorcycle, Horse, Donkey, Carriage, Cart, GoKart, Hearse))]
+    elif env == "Mer": available = [v for v in available if isinstance(v, (Boat, Submarine, Whale, Dolphin))]
+    elif env == "Air": available = [v for v in available if isinstance(v, (Plane, Helicopter, Dragon, Eagle))]
+
     if search: available = [v for v in available if search.lower() in str(v.show_details()).lower()]
 
-    cols = st.columns(3)
-    for i, v in enumerate(available):
-        with cols[i%3]:
-            with st.container(border=True):
-                nom = getattr(v, 'brand', getattr(v, 'name', '?'))
-                st.markdown(f"**{nom}**")
-                st.write(f"{v.daily_rate}€ / jour")
-                with st.popover("Réserver"):
-                    days = st.number_input("Jours", 1, 30, 3, key=f"d_{v.id}")
-                    if st.button("Confirmer", key=f"book_{v.id}"):
-                        rental = system.create_rental(me.id, v.id, date.today(), date.today()+timedelta(days=days))
-                        if rental: save_data(); st.success("Fait !"); time.sleep(1); st.rerun()
+    if not available:
+        st.info("Aucun véhicule disponible correspondant à vos critères.")
+    else:
+        cols = st.columns(3)
+        for i, v in enumerate(available):
+            with cols[i%3]:
+                with st.container(border=True):
+                    nom = getattr(v, 'brand', getattr(v, 'name', '?'))
+                    modele = getattr(v, 'model', getattr(v, 'breed', ''))
+
+                    icon = "🚗"
+                    if isinstance(v, Dragon): icon = "🐉"
+                    elif isinstance(v, Boat): icon = "🚤"
+                    elif isinstance(v, Plane): icon = "✈️"
+                    
+                    st.markdown(f"### {icon} {nom}")
+                    st.caption(modele)
+
+                    st.markdown(f"**{v.daily_rate}€ / jour**")
+
+                    with st.popover("📅 Réserver", use_container_width=True):
+                        st.markdown(f"**Location de :** {nom} {modele}")
+
+                        d_col1, d_col2 = st.columns(2)
+                        d_start = d_col1.date_input("Début", value=date.today(), key=f"start_{v.id}")
+                        d_end = d_col2.date_input("Fin", value=date.today() + timedelta(days=1), key=f"end_{v.id}")
+
+                        if d_end >= d_start:
+                            days = (d_end - d_start).days
+                            days = max(1, days)
+                            total_estime = days * v.daily_rate
+                            st.info(f"Durée : {days} jours\n\nTotal estimé : **{total_estime}€**")
+                        
+                        if st.button("Confirmer la réservation", key=f"conf_{v.id}", type="primary"):
+                            s_str = d_start.strftime("%Y-%m-%d")
+                            e_str = d_end.strftime("%Y-%m-%d")
+
+                            try:
+                                # 1. Création via la classe Rental (Validation incluse)
+                                new_rental = Rental(me, v, s_str, e_str)
+                                
+                                # 2. Ajout au système
+                                system.rentals.append(new_rental)
+                                save_data()
+                                
+                                st.success("✅ Réservation validée !")
+                                time.sleep(1)
+                                st.rerun()
+                                
+                            except ValueError as e:
+                                st.error(f"Erreur : {e}")
 
 elif selected == "Mes Locations":
     if st.session_state.user_role != "client": st.error("Accès réservé."); st.stop()
-    # ... (Code "Mes Locations" précédent) ...
-    # Je remets le strict minimum pour la continuité
+    
     me = st.session_state.current_user
-    st.title("Mes Contrats")
+    st.title(f"Espace Client : {me.name}")
+
+    # Filtre des locations de CE client
     my_rentals = [r for r in system.rentals if r.customer.id == me.id]
-    actives = [r for r in my_rentals if r.is_active]
-    if actives:
-        for r in actives:
-            st.info(f"Location #{r.id} en cours ({r.total_price}€)")
-            if st.button("Rendre", key=f"ret_{r.id}"):
-                system.return_vehicle(r.id); save_data(); st.rerun()
-    else: st.info("Aucune location active.")
+    
+    # Séparation Actifs / Passés
+    active_rentals = [r for r in my_rentals if r.is_active]
+    history_rentals = [r for r in my_rentals if not r.is_active]
+
+    tab_active, tab_hist = st.tabs(["🟢 En cours", "📜 Historique"])
+
+    # --- LISTE DES LOCATIONS ACTIVES (POUR RETOUR) ---
+    with tab_active:
+        if not active_rentals:
+            st.info("Vous n'avez aucune location en cours.")
+        else:
+            for r in active_rentals:
+                with st.expander(f"🚗 {r.vehicle.brand} {r.vehicle.model} (Retour prévu : {r.end_date.date()})", expanded=True):
+                    c1, c2 = st.columns([2, 1])
+                    
+                    with c1:
+                        st.write(f"**Début :** {r.start_date.date()}")
+                        st.write(f"**Fin prévue :** {r.end_date.date()}")
+                        st.write(f"**Coût journalier :** {r.vehicle.daily_rate}€")
+                        st.info(f"💰 Coût estimé actuel : **{r.calculate_cost()} €**")
+
+                    with c2:
+                        st.markdown("#### ↩️ Retourner le véhicule")
+                        d_return = st.date_input("Date de retour réel", value=date.today(), key=f"ret_date_{r.id}")
+                        
+                        if st.button("Valider le retour", key=f"btn_ret_{r.id}", type="primary"):
+                            ret_str = d_return.strftime("%Y-%m-%d")
+                            try:
+                                # Appel de la méthode métier
+                                final_cost = r.close_rental(ret_str)
+                                save_data()
+                                
+                                st.balloons()
+                                st.success(f"Véhicule rendu ! Prix final : {final_cost} €")
+                                
+                                if r.penalty > 0:
+                                    st.warning(f"⚠️ Pénalité de retard incluse : {r.penalty} €")
+                                
+                                time.sleep(2)
+                                st.rerun()
+                            except ValueError as e:
+                                st.error(f"Erreur date : {e}")
+
+    # --- HISTORIQUE ---
+    with tab_hist:
+        if not history_rentals:
+            st.caption("Aucun historique.")
+        else:
+            data_hist = []
+            for r in history_rentals:
+                data_hist.append({
+                    "Véhicule": f"{r.vehicle.brand} {r.vehicle.model}",
+                    "Du": r.start_date.date(),
+                    "Au": r.actual_return_date.date() if r.actual_return_date else "N/A",
+                    "Total Payé": f"{r.total_cost} €",
+                    "Pénalité": f"{r.penalty} €" if r.penalty > 0 else "-"
+                })
+            st.dataframe(pd.DataFrame(data_hist), use_container_width=True)
 
 # --- 3. PAGES ADMIN (SÉCURISÉES) ---
 
@@ -1042,5 +1253,41 @@ elif selected == "Base Clients":
 
 elif selected == "Locations Admin":
     if st.session_state.user_role != "admin": st.error("Accès Admin requis."); st.stop()
-    st.title("📝 Tous les contrats")
-    st.dataframe(pd.DataFrame([r.to_dict() for r in system.rentals]), use_container_width=True)
+
+    st.title("📝 Registre Global des Locations")
+
+    active_count = len([r for r in system.rentals if r.is_active])
+    total_rev = sum([r.total_cost for r in system.rentals if not r.is_active])
+
+    k1, k2 = st.columns(2)
+    k1.metric("Véhicules loués actuellement", active_count)
+    k2.metric("Chiffre d'Affaires (Clôturés)", f"{total_rev} €")
+
+    st.divider()
+
+    if not system.rentals:
+        st.info("Aucune donnée de location.")
+    else:
+        admin_data = []
+        for r in system.rentals:
+            status_icon = "🟢 En cours" if r.is_active else "🔴 Terminé"
+
+            d_start = r.start_date.date()
+            d_end = r.end_date.date()
+            d_real = r.actual_return_date.date() if r.actual_return_date else "En attente"
+
+            client_name = r.customer.name if hasattr(r.customer, 'name') else f"ID {r.customer}"
+            vehicle_name = f"{r.vehicle.brand} {r.vehicle.model}"
+
+            admin_data.append({
+                "Statut": status_icon,
+                "Client": client_name,
+                "Véhicule": vehicle_name,
+                "Début": d_start,
+                "Fin Prévue": d_end,
+                "Retour Réel": d_real,
+                "Montant": f"{r.total_cost} €",
+                "Pénalité": f"{r.penalty} €"
+            })
+        
+        st.dataframe(pd.DataFrame(admin_data), use_container_width=True)
