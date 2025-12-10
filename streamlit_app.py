@@ -4,6 +4,7 @@ import sys
 import os
 import time
 import json
+import base64
 from datetime import date, timedelta
 from streamlit_option_menu import option_menu
 from streamlit_lottie import st_lottie
@@ -23,7 +24,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_folder = os.path.join(current_dir, "CarRentalSystem")
 if project_folder not in sys.path:
     sys.path.append(project_folder)
-
+    
 from location.system import CarRentalSystem
 from location.rental import Rental
 from storage import StorageManager
@@ -32,28 +33,6 @@ from fleet.vehicles import *
 from fleet.animals import *
 from fleet.enums import VehicleStatus, MaintenanceType
 from fleet.transport_base import MotorizedVehicle, TransportAnimal, TowedVehicle
-
-import base64
-
-def play_sound(sound_name):
-    sound_file = os.path.join(current_dir, "assets", "sounds", f"{sound_name}.mp3")
-
-    if not os.path.exists(sound_file):
-        return
-
-    try:
-        with open(sound_file, "rb") as f:
-            data = f.read()
-            b64_val = base64.b64encode(data).decode()
-
-            md = f"""
-                <audio autoplay style="display:none;">
-                <source src="data:audio/mp3;base64,{b64_val}" type="audio/mp3">
-                </audio>
-            """
-            st.markdown(md, unsafe_allow_html=True)
-    except Exception as e:
-        print(f"Erreur audio: {e}")
 
 # =========================================================
 # 2. CONSTANTES & DESIGN
@@ -88,13 +67,13 @@ DEFAULT_MAINT_COSTS = {
     MaintenanceType.HOOF_CARE: 40.0, MaintenanceType.SADDLE_MAINTENANCE: 15.0,
     MaintenanceType.TIRE_CHANGE: 120.0, MaintenanceType.OIL_CHANGE: 89.0,
     MaintenanceType.AXLE_GREASING: 30.0,
-    MaintenanceType.HULL_CLEANING: 500.0,    # Bateau
-    MaintenanceType.SONAR_CHECK: 150.0,      # Sous-marin
-    MaintenanceType.NUCLEAR_SERVICE: 5000.0, # Sous-marin
-    MaintenanceType.AVIONICS_CHECK: 300.0,   # Avion
-    MaintenanceType.ROTOR_INSPECTION: 200.0, # Hélico
-    MaintenanceType.WING_CARE: 60.0,         # Aigle/Dragon
-    MaintenanceType.SCALE_POLISHING: 100.0   # Dragon
+    MaintenanceType.HULL_CLEANING: 500.0,   
+    MaintenanceType.SONAR_CHECK: 150.0,     
+    MaintenanceType.NUCLEAR_SERVICE: 5000.0,
+    MaintenanceType.AVIONICS_CHECK: 300.0,  
+    MaintenanceType.ROTOR_INSPECTION: 200.0,
+    MaintenanceType.WING_CARE: 60.0,        
+    MaintenanceType.SCALE_POLISHING: 100.0  
 }
 
 DEFAULT_DURATIONS = {
@@ -189,6 +168,26 @@ THEMES = {
     }
 }
 
+def play_sound(sound_name):
+    sound_file = os.path.join(current_dir, "assets", "sounds", f"{sound_name}.mp3")
+    
+    if not os.path.exists(sound_file):
+        return
+    
+    try:
+        with open(sound_file, "rb") as f:
+            data = f.read()
+            b64_val = base64.b64encode(data).decode()
+
+            md = f"""
+                <audio autoplay style="display:none;">
+                <source src="data:audio/mp3;base64,{b64_val}" type="audio/mp3">
+                </audio>
+            """
+            st.markdown(md, unsafe_allow_html=True)
+    except Exception as e:
+        print(f"Erreur audio: {e}")
+        
 def apply_theme(theme_name):
     t = THEMES[theme_name]
     font_url = "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
@@ -425,6 +424,7 @@ def page_locations(system):
 # =========================================================
 # 3. INITIALISATION SESSION
 # =========================================================
+
 if 'authenticated' not in st.session_state: st.session_state.authenticated = False
 if 'user_role' not in st.session_state: st.session_state.user_role = None
 if 'current_user' not in st.session_state: st.session_state.current_user = None
@@ -452,10 +452,11 @@ storage = st.session_state.storage
 def save_data():
     storage.save_system(system)
     st.toast("Synchronisation effectuée.", icon="☁️")
-
+    
 # =========================================================
 # 4. TOP BAR (CONNEXION)
 # =========================================================
+
 apply_theme(st.session_state.current_theme)
 
 c_logo, c_spacer, c_login = st.columns([1, 4, 1.5])
@@ -525,27 +526,21 @@ if st.session_state.show_login and not st.session_state.authenticated:
 # 5. NAVIGATION & CONTENU (MULTI-ROLES)
 # =========================================================
 
-# --- DÉFINITION DES MENUS ---
-# Les pages communes à tout le monde
 common_opts = ["Accueil", "Catalogue Public"]
 common_icons = ["house", "grid"]
 
 if st.session_state.user_role == "admin":
-    # Admin : Commun + Gestion
     menu_opts = common_opts + ["Dashboard", "Gestion Flotte", "Atelier", "Base Clients", "Locations Admin"]
     menu_icons = common_icons + ["speedometer2", "car-front", "tools", "people", "clipboard-data"]
     
 elif st.session_state.user_role == "client":
-    # Client : Commun + Espace Perso
     menu_opts = common_opts + ["Louer un véhicule", "Mes Locations"]
     menu_icons = common_icons + ["cart4", "clock-history"]
-    
-else:
-    # Visiteur : Juste le commun
-    menu_opts = common_opts
-    menu_icons = common_icons
 
-# --- SIDEBAR ---
+else:
+    menu_opts = common_opts
+    menu_icons = common_icon
+    
 with st.sidebar:
     st.title("Navigation")
     
@@ -736,6 +731,7 @@ elif selected == "Catalogue Public":
                             st.button("Indisponible", key=unique_key, disabled=True)
 
 # --- 2. PAGES CLIENT (SÉCURISÉES) ---
+
 elif selected == "Louer un véhicule":
     if st.session_state.user_role != "client": st.error("Accès réservé aux clients."); st.stop()
 
@@ -893,7 +889,15 @@ elif selected == "Mes Locations":
                 })
             st.dataframe(pd.DataFrame(data_hist), use_container_width=True)
 
+            
 # --- 3. PAGES ADMIN (SÉCURISÉES) ---
+elif selected == "Dashboard":
+    if st.session_state.user_role != "admin": st.error("Accès Admin requis."); st.stop()
+    st.title("📊 Tableau de Bord")
+    k1, k2, k3 = st.columns(3)
+    k1.metric("CA Total", f"{sum(r.total_price for r in system.rentals)}€")
+    k2.metric("Parc", len(system.fleet))
+    k3.metric("Clients", len(system.customers))
 
 elif selected == "Dashboard":
     if st.session_state.user_role != "admin": st.error("Accès Admin requis."); st.stop()
