@@ -615,7 +615,7 @@ if selected == "Accueil":
     team1, team2, team3 = st.columns(3)
 
     with team1:
-        st.image("https://api.dicebear.com/7.x/avataaars/svg?seed=maxence", width=100)
+        st.image("assets/images/MP.png", width=100)
         st.markdown("**Maxence PARISSE**")
         st.caption("PDG & Fondateur")
 

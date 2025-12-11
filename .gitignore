@@ -82,4 +82,4 @@ Thumbs.db
 # =======================================================
 
 # Fichiers de votre script de nettoyage
-generate_tree_clean.py
+generate_tree.py
