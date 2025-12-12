@@ -629,19 +629,24 @@ if selected == "Accueil":
 
     st.subheader("👥 L'Équipe de Direction")
 
-    team1, team2, team3 = st.columns(3)
+    team1, team2, team3, team4 = st.columns(4)
 
     with team1:
-        st.image("assets/images/MP.png", width=100)
-        st.markdown("**Maxence PARISSE**")
+        st.image("assets/images/Darwiche.jpg", width=100)
+        st.markdown("**Ahmad Darwiche**")
         st.caption("PDG & Fondateur")
+    
+    with team2:
+        st.image("assets/images/exemple.webp", width=100)
+        st.markdown("**Maxence PARISSE**")
+        st.caption("Conducteur de Calèche/Charette")
 
     with team3:
         st.image("assets/images/CC.png", width=100)
         st.markdown("**Clémence CHARLES**")
         st.caption("Directrice Vétérinaire & Dresseuse")
 
-    with team2:
+    with team4:
         st.image("assets/images/ludovic.jpg", width=100)
         st.markdown("**Ludovic ALLERON**")
         st.caption("Chef de la Sécurité & Responsable Flotte Marine")
