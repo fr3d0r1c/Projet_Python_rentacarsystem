@@ -116,7 +116,9 @@ class StorageManager:
                 y1, m1, d1 = map(int, r["start_date"].split('-'))
                 y2, m2, d2 = map(int, r["end_date"].split('-'))
 
-                new_rental = Rental(r["id"], veh, cust, date(y1,m1,d1), date(y2,m2,d2))
+                new_rental = Rental(cust, veh, r["start_date"], r["end_date"], from_history=True)
+
+                new_rental.id = r.get("id", len(system.rentals)+1)
                 new_rental.is_active = r["is_active"]
                 system.rentals.append(new_rental)
 

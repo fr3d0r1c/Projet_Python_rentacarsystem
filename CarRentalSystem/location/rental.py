@@ -6,9 +6,10 @@ from fleet.enums import VehicleStatus
 from datetime import datetime
 
 class Rental:
-    def __init__(self, customer, vehicle, start_date_str, end_date_str):
+    def __init__(self, customer, vehicle, start_date_str, end_date_str, from_history=False):
         self.customer = customer
         self.vehicle = vehicle
+        self.from_history = from_history
 
         try:
             self.start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
@@ -22,15 +23,21 @@ class Rental:
         self.is_active = False
 
         self._validate_rental()
+
         self.is_active = True
         self.vehicle.status = VehicleStatus.RENTED
 
     def _validate_rental(self):
+
         if self.start_date > self.end_date:
             raise ValueError(f"Erreur: La date de fin ({self.end_date.date()}) est avant le début.")
         
-        if not self.vehicle.is_available:
-            raise ValueError(f"Le véhicule {self.vehicle.brand} {self.vehicle.model} est déjà loué !")
+        if not self.from_history and not self.vehicle.is_available:
+
+            nom = getattr(self.vehicle, 'brand', getattr(self.vehicle, 'name', 'Véhicule'))
+            modele = getattr(self.vehicle, 'model', getattr(self.vehicle, 'breed', ''))
+            
+            raise ValueError(f"Le véhicule {nom} {modele} est déjà loué !")
         
     def calculate_cost(self):
         """Calcule le coût théorique (avant retour réel)."""

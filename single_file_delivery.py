@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 
 # =========================================================
-# 1. UTILITAIRES (AFFICHAGE & SAISIE SANS RICH)
+# 1. UTILITAIRES (AFFICHAGE & SAISIE SANS DÉPENDANCES)
 # =========================================================
 
 def clear_screen():
@@ -87,7 +87,7 @@ class MaintenanceType(Enum):
     SCALE_POLISHING = "Écailles"
 
 # =========================================================
-# 3. CLASSES MÉTIER (LOGIQUE VALIDÉE PAR TESTS)
+# 3. CLASSES MÉTIER
 # =========================================================
 
 class Maintenance:
@@ -104,7 +104,7 @@ class TransportMode(ABC):
         self.status = VehicleStatus.AVAILABLE
         self.maintenance_log: List[Maintenance] = []
 
-    #PROPRIÉTÉ AJOUTÉE POUR LES TESTS
+    # Propriété pour robustesse des tests et validations
     @property
     def is_available(self):
         return self.status == VehicleStatus.AVAILABLE
@@ -173,9 +173,12 @@ class Customer:
     def to_dict(self):
         return {"id": self.id, "name": self.name, "driver_license": self.driver_license, "email": self.email, "phone": self.phone, "username": self.username, "password": self.password}
 
+# === CLASSE RENTAL MISE À JOUR (CORRECTION CRITIQUE) ===
 class Rental:
-    def __init__(self, customer, vehicle, start_date_str, end_date_str):
+    def __init__(self, customer, vehicle, start_date_str, end_date_str, from_history=False):
         self.customer = customer; self.vehicle = vehicle
+        self.from_history = from_history # Indicateur pour le chargement
+
         try:
             self.start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
             self.end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
@@ -183,14 +186,22 @@ class Rental:
         
         self.actual_return_date = None; self.total_cost = 0.0; self.penalty = 0.0; self.is_active = False
         
-        # Validation et Activation
+        # Validation sécurisée
         self._validate_rental()
+        
+        # Activation
         self.is_active = True
         self.vehicle.status = VehicleStatus.RENTED # Mise à jour du statut
 
     def _validate_rental(self):
         if self.start_date > self.end_date: raise ValueError("Fin avant Début.")
-        if not self.vehicle.is_available: raise ValueError("Véhicule indisponible.")
+        
+        # Si on charge depuis l'historique (JSON), on ignore la vérification de disponibilité
+        # car le véhicule est DEJA marqué comme loué dans le système.
+        if not self.from_history and not self.vehicle.is_available: 
+            # Gestion du nom pour l'erreur
+            nom = getattr(self.vehicle, 'brand', getattr(self.vehicle, 'name', 'Véhicule'))
+            raise ValueError(f"{nom} indisponible.")
 
     def calculate_cost(self):
         days = max(1, (self.end_date - self.start_date).days)
@@ -260,12 +271,17 @@ class StorageManager:
             new_c = Customer(c["id"], c["name"], c["driver_license"], c["email"], c["phone"], c["username"], c["password"])
             system.customers.append(new_c); cust_map[new_c.id] = new_c
 
+        # === CORRECTION CHARGEMENT ===
         for r in data.get("rentals", []):
             veh = fleet_map.get(r["vehicle_id"]); cust = cust_map.get(r["customer_id"])
             if veh and cust:
-                new_r = Rental(cust, veh, r["start_date"], r["end_date"])
-                new_r.is_active = r["is_active"]; new_r.total_cost = r["total_cost"]
+                # On passe from_history=True pour bypasser la vérif de dispo
+                new_r = Rental(cust, veh, r["start_date"], r["end_date"], from_history=True)
+                
+                new_r.is_active = r["is_active"]
+                new_r.total_cost = r.get("total_cost", 0.0)
                 system.rentals.append(new_r)
+        
         return system
 
 # =========================================================
@@ -303,6 +319,7 @@ def rental_menu(system):
             veh = next((x for x in system.fleet if x.id == vid), None)
             if cust and veh:
                 try:
+                    # from_history=False par défaut ici
                     r = Rental(cust, veh, ask_date("Début"), ask_date("Fin"))
                     system.rentals.append(r)
                     print(f"✅ Location OK. Coût: {r.calculate_cost()}€")
@@ -336,6 +353,7 @@ def client_menu(system):
 def main():
     storage = StorageManager("data.json")
     system = storage.load_system()
+    
     while True:
         clear_screen(); print_header("RENT-A-DREAM")
         print("1. Flotte\n2. Clients\n3. Locations\n4. Sauvegarder\n0. Quitter")

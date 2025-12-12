@@ -761,20 +761,29 @@ elif selected == "Espace Personnel":
 
     with tab_active:
         st.subheader("Véhicules à rendre")
+
         if not active_rentals:
             st.info("Vous n'avez aucune location en cours. Profitez-en pour louer un Dragon !")
             if st.button("Louer un véhicule maintenant"):
                 st.switch_page("streamlit_app.py")
         else:
             for r in active_rentals:
-                with st.expander(f"🚗 {r.vehicle.brand} {r.vehicle.model} (Retour prévu : {r.end_date.date()})", expanded=True):
+                nom_vehicule = getattr(r.vehicle, 'brand', getattr(r.vehicle, 'name', 'Véhicule'))
+                detail_vehicule = getattr(r.vehicle, 'model', getattr(r.vehicle, 'breed', ''))
+                
+                titre_expander = f"🚗 {nom_vehicule} {detail_vehicule} (Retour prévu : {r.end_date.date()})"
+
+                with st.expander(titre_expander, expanded=True):
                     c1, c2 = st.columns([2, 1])
+
                     with c1:
                         st.write(f"**Début :** {r.start_date.date()}")
                         st.write(f"**Fin prévue :** {r.end_date.date()}")
                         st.info(f"💰 Coût estimé actuel : **{r.calculate_cost()} €**")
+
                     with c2:
                         d_return = st.date_input("Date de retour", value=date.today(), key=f"ret_{r.id}")
+                        
                         if st.button("Valider le retour", key=f"btn_ret_{r.id}", type="primary"):
                             ret_str = d_return.strftime("%Y-%m-%d")
                             try:
@@ -782,10 +791,12 @@ elif selected == "Espace Personnel":
                                 save_data()
                                 st.balloons()
                                 st.success(f"Retour confirmé ! Total : {final} €")
-                                if r.penalty > 0: st.warning(f"Pénalité retard : {r.penalty} €")
+                                if r.penalty > 0: 
+                                    st.warning(f"Pénalité retard : {r.penalty} €")
                                 time.sleep(2)
                                 st.rerun()
-                            except ValueError as e: st.error(str(e))
+                            except ValueError as e: 
+                                st.error(str(e))
     
     with tab_hist:
         st.subheader("Mes aventures passées")
@@ -798,8 +809,11 @@ elif selected == "Espace Personnel":
         else:
             data = []
             for r in history_rentals:
+                nom = getattr(r.vehicle, 'brand', getattr(r.vehicle, 'name', '?'))
+                model = getattr(r.vehicle, 'model', getattr(r.vehicle, 'breed', ''))
+
                 data.append({
-                    "Véhicule": f"{r.vehicle.brand} {r.vehicle.model}",
+                    "Véhicule": f"{nom} {model}",
                     "Période": f"{r.start_date.date()} -> {r.actual_return_date.date()}",
                     "Coût": f"{r.total_cost} €"
                 })
