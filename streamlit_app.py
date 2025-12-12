@@ -475,7 +475,11 @@ apply_theme(st.session_state.current_theme)
 
 c_logo, c_spacer, c_login = st.columns([1, 4, 1.5])
 with c_logo:
-    st.image("https://img.icons8.com/clouds/200/car.png", width=80)
+    logo_path = os.path.join(current_dir, "assets", "images", "logo.png")
+    if os.path.exists(logo_path):
+        st.image(logo_path, width=150)
+    else:
+        st.error("Logo introuvable")
 with c_login:
     if st.session_state.authenticated:
         u_name = "Admin" if st.session_state.user_role == "admin" else st.session_state.current_user.name
