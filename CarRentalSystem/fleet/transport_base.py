@@ -10,6 +10,10 @@ class TransportMode(ABC):
         self.status = VehicleStatus.AVAILABLE
         self.maintenance_log: List[Maintenance] = []
 
+    @property
+    def is_available(self):
+        return self.status == VehicleStatus.AVAILABLE
+
     def add_maintenance(self, maintenance: Maintenance):
         self.maintenance_log.append(maintenance)
 
