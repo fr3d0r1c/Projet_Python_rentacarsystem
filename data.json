@@ -1,0 +1,39 @@
+{
+    "fleet": [
+        {
+            "type": "Horse",
+            "id": 1,
+            "daily_rate": 35.0,
+            "status": "Loué",
+            "maintenance_log": [],
+            "name": "Balmoral",
+            "breed": "Pur-Sang Arabe",
+            "age": 8,
+            "wither_height": 180,
+            "shoe_size_front": 136,
+            "shoe_size_rear": 136
+        }
+    ],
+    "customers": [
+        {
+            "id": 1,
+            "name": "Parisse Maxence",
+            "driver_license": "B-123456",
+            "email": "mparisse.ira2028@esaip.org",
+            "phone": "0102030405",
+            "username": "mparisse",
+            "password": "Mparisse"
+        }
+    ],
+    "rentals": [
+        {
+            "id": 0,
+            "customer_id": 1,
+            "vehicle_id": 1,
+            "start_date": "2025-12-12",
+            "end_date": "2025-12-15",
+            "is_active": true,
+            "total_cost": 0.0
+        }
+    ]
+}

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
-from enums import VehicleStatus
-from maintenance import Maintenance
+from .enums import VehicleStatus
+from .maintenance import Maintenance
 
 class TransportMode(ABC):
     def __init__(self, t_id: int, daily_rate: float):
@@ -9,6 +9,10 @@ class TransportMode(ABC):
         self.daily_rate = daily_rate
         self.status = VehicleStatus.AVAILABLE
         self.maintenance_log: List[Maintenance] = []
+
+    @property
+    def is_available(self):
+        return self.status == VehicleStatus.AVAILABLE
 
     def add_maintenance(self, maintenance: Maintenance):
         self.maintenance_log.append(maintenance)

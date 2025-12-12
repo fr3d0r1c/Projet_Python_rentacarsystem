@@ -7,7 +7,6 @@ class VehicleStatus(Enum):
     OUT_OF_SERVICE = "Hors Service"
 
 class MaintenanceType(Enum):
-    # --- BASIQUES ---
     MECHANICAL_CHECK = "Contrôle Mécanique"
     CLEANING = "Nettoyage"
     HOOF_CARE = "Soin Sabots/Griffes"

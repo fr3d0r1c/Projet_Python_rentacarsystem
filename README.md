@@ -9,7 +9,9 @@ This project simulates a car rental agency system. It allows the manager to hand
 ## ✨ Key Features
 
 ### 1. 🚙 Fleet Management
+
 Handle a diverse hierarchy of vehicles with specific attributes:
+
 * **Cars** 🚗
 * **Trucks** 🚚
 * **Motorcycles** 🏍️
@@ -19,18 +21,24 @@ Handle a diverse hierarchy of vehicles with specific attributes:
 * **Features:** Track ID, brand, model, daily rate, and maintenance status.
 
 ### 2. 👥 Customer Center
+
 Manage your client database efficiently:
+
 * Store customer details (ID, Name, Age, License).
 * Smart Validation: Checks if the customer meets the minimum age requirement for specific vehicle types.
 
 ### 3. 📅 Rental System
+
 The heart of the application:
+
 * Book vehicles for specific dates.
 * Auto-Calculations: Automatically computes total cost based on duration.
 * Availability checks to prevent double-booking.
 
 ### 4. 📊 Reports & Analytics
+
 Generate instant insights via the `CarRentalSystem` class:
+
 * ✅ List of available vehicles.
 * ⏳ Current active rentals.
 * 💰 Total revenue calculation.

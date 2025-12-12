@@ -1,0 +1,40 @@
+📂 PROJET : Projet_Python_rentacarsystem
+==================================================
+├── 📄 Consignes.md
+├── 📄 DiagrammeUML.png
+├── 📄 README.md
+├── 📄 classes.py
+├── 📄 generate_tree.py
+├── 📄 main.py
+├── 📄 streamlit_app.py
+├── 📄 structure_projet.txt
+│   ├── 📁 assets/
+│   │   ├── 📁 animations/
+│   │   │   ├── 📄 boat.json
+│   │   │   ├── 📄 car.json
+│   │   │   ├── 📄 default.json
+│   │   │   ├── 📄 dragon.json
+│   │   │   ├── 📄 eagle.json
+│   │   │   ├── 📄 horse.json
+│   │   │   ├── 📄 truck.json
+│   │   ├── 📁 sounds/
+│   ├── 📁 CarRentalSystem/
+│   │   ├── 📄 storage.py
+│   │   ├── 📁 clients/
+│   │   │   ├── 📄 customer.py
+│   │   │   ├── 📄 ui.py
+│   │   ├── 📁 fleet/
+│   │   │   ├── 📄 animals.py
+│   │   │   ├── 📄 enums.py
+│   │   │   ├── 📄 maintenance.py
+│   │   │   ├── 📄 transport_base.py
+│   │   │   ├── 📄 ui.py
+│   │   │   ├── 📄 vehicles.py
+│   │   ├── 📁 location/
+│   │   │   ├── 📄 rental.py
+│   │   │   ├── 📄 system.py
+│   │   │   ├── 📄 ui.py
+│   ├── 📁 UML/
+│   │   ├── 📄 CarRentalSystemUML.drawio
+│   │   ├── 📄 DiagrammeUML.drawio
+│   │   ├── 📄 TransportModeUML.drawio

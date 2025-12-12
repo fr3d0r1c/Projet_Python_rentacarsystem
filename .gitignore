@@ -1,6 +1,86 @@
-**/__pycache__/
+# =======================================================
+# 1. ENVIRONNEMENT VIRTUEL & DÉPENDANCES
+# =======================================================
 
-GestionFlotte/ma_flotte.json
+# Dossiers d'environnements virtuels courants (CRUCIAL)
+.venv/
+venv/
+env/
+/lib/
+/include/
 
+# Fichiers de dépendances Python (souvent inutiles pour d'autres utilisateurs)
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.tox/
+
+# =======================================================
+# 2. FICHIERS COMPILÉS & TEMPORAIRES PYTHON
+# =======================================================
+
+# Fichiers de code compilé (Bytecode)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Fichiers générés par IPython/Jupyter
+.ipynb_checkpoints
+
+# =======================================================
+# 3. STREAMLIT & CACHE WEB
+# =======================================================
+
+# Dossier de configuration local de Streamlit
+.streamlit/
+
+# Dossier de cache généré par Streamlit (pour les fonctions @st.cache_data)
+# Si vous utilisez st.cache_data/st.cache_resource
+.st_cache/
+.streamlit_cache/
+
+# =======================================================
+# 4. FICHIERS DE LOG & SORTIE
+# =======================================================
+
+# Fichiers de log
+*.log
+*.tmp
+*.bak
+
+# Fichiers de données temporaires (sauf si vous voulez versionner data.json)
+# Si vous ne voulez PAS que votre fichier data.json soit dans Git :
+# data.json
+
+# Si vous voulez garder data.json mais ignorer le fichier de structure de l'arbre :
+structure_projet.txt
+
+# =======================================================
+# 5. FICHIERS DE CONFIGURATION LOCALE & SECRETS
+# =======================================================
+
+# Clés d'API ou secrets (si vous en ajoutez un jour)
+secrets.toml
+.env
+
+# Fichiers de configuration spécifiques à l'utilisateur (ex: Pycharm, VS Code)
+.idea/
+.vscode/
+
+# =======================================================
+# 6. SYSTÈME D'EXPLOITATION
+# =======================================================
+
+# macOS
 .DS_Store
+
+# Windows
 Thumbs.db
+
+# =======================================================
+# 7. EXCLUSION SPÉCIFIQUE AU PROJET (Facultatif)
+# =======================================================
+
+# Fichiers de votre script de nettoyage
+generate_tree.py
+structure_projet.txt

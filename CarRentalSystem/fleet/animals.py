@@ -1,4 +1,4 @@
-from transport_base import TransportAnimal
+from .transport_base import TransportAnimal
 
 # --- TERRE ---
 class Horse(TransportAnimal):

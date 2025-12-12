@@ -9,11 +9,14 @@ from rich.columns import Columns
 from rich.box import ROUNDED
 
 # Imports de vos classes
-from vehicles import *
-from animals import *
-from maintenance import Maintenance
-from enums import MaintenanceType, VehicleStatus
-from transport_base import MotorizedVehicle, TransportAnimal, TowedVehicle
+from datetime import date
+# 👇 MODIFICATION DES IMPORTS
+from CarRentalSystem import fleet, storage
+from fleet.vehicles import Car, Truck, Motorcycle, Hearse, GoKart, Carriage, Cart, Boat, Plane, Helicopter, Submarine, MotorizedVehicle, TowedVehicle
+from fleet.animals import Horse, Donkey, Camel, Whale, Eagle, Dragon, Dolphin, TransportAnimal
+from fleet.maintenance import Maintenance
+from fleet.enums import MaintenanceType, VehicleStatus
+from location import system
 
 # Initialisation de la console Rich
 console = Console()
@@ -77,18 +80,37 @@ def ask_text(msg):
     return Prompt.ask(f"[bold cyan]{msg}[/]")
 
 # --- 📋 MENU PRINCIPAL VISUEL ---
-def show_main_menu():
-    # clear_screen() # Décommentez si vous voulez effacer l'écran à chaque fois
+def show_main_menu(system, storage):
     menu_text = """
 [bold green]1.[/] 📋 Voir la flotte (Tableau)
 [bold green]2.[/] ➕ Ajouter un élément
 [bold green]3.[/] 🔧 Maintenance / Soins
 [bold green]4.[/] 🐴 Atteler (Charrette/Calèche)
-[bold cyan]5.[/] 🔍 Voir Détails Complets (Fiche)
-[bold green]6.[/] 🗑️ Supprimer un élément
-[bold red]7.[/] 💾 Sauvegarder et Quitter
+[bold green]5.[/] 🗑️ Supprimer un élément
+[bold cyan]6.[/] 🔍 Voir Détails (Fiche)
+[bold magenta]7.[/] 📊 Stats & Recherche
+[bold red]8.[/] 💾 Sauvegarder et Quitter 
     """
     console.print(Panel(menu_text, title="[bold blue]GESTION DE FLOTTE[/]", subtitle="Terre • Air • Mer", expand=False))
+
+    fleet = system.fleet
+
+    while True:
+        choice = Prompt.ask("Action Garage", choices=["1", "2", "3", "4", "5", "6", "7", "0"])
+
+        if choice == '0': break
+        elif choice == '1' : list_fleet(fleet)
+        elif choice == '2' : add_menu_by_environment(fleet)
+        elif choice == '3' : maintenance_menu(fleet)
+        elif choice == '4' : harness_menu(fleet)
+        elif choice == '5' : delete_menu(fleet)
+        elif choice == '6' : show_single_vehicle_details(fleet)
+        elif choice == '7' : statistics_menu(fleet)
+        elif choice == '8':
+            storage.save_system(system)
+            console.print("[bold green]💾 Système sauvegardé ! Retour au menu principal.[/]")
+            Prompt.ask("Entrée pour continuer...")
+            break
 
 def show_single_vehicle_details(fleet):
     target_id = ask_int("Entrez l'ID de l'élément à inspecter")
@@ -485,3 +507,60 @@ def delete_menu(fleet):
             console.print("[bold red]🗑️ Élément supprimé.[/]")
     else:
         console.print("[red]❌ Introuvable.[/]")
+
+# --- 📊 MENU STATISTIQUES & RECHERCHE ---
+from rich.progress import track
+from time import sleep
+
+def statistics_menu(fleet):
+    while True:
+        console.print(Panel("[1] 📈 Rapport Global\n[2] 🔍 Recherche Avancée\n[0] Retour", title="Intelligence Artificielle (ou presque)"))
+        choice = Prompt.ask("Votre choix", choices=["0", "1", "2"])
+        
+        if choice == '0': break
+
+        # --- 1. RAPPORT GLOBAL ---
+        if choice == '1':
+            total = len(fleet)
+            if total == 0:
+                console.print("[red]Flotte vide.[/]")
+                continue
+
+            # Calculs
+            nb_maint = sum(1 for v in fleet if v.status == VehicleStatus.UNDER_MAINTENANCE)
+            nb_rented = sum(1 for v in fleet if v.status == VehicleStatus.RENTED)
+            nb_avail = sum(1 for v in fleet if v.status == VehicleStatus.AVAILABLE)
+            
+            # Affichage "Fun" avec Rich
+            console.rule("[bold blue]RAPPORT DE FLOTTE[/]")
+            console.print(f"Total Véhicules : [bold cyan]{total}[/]")
+            console.print(f"💰 Revenu Potentiel/Jour : [bold green]{sum(v.daily_rate for v in fleet)}€[/]")
+            
+            # Barres visuelles
+            pct_maint = (nb_maint / total) * 100
+            pct_dispo = (nb_avail / total) * 100
+            
+            rprint(f"\n[red]En Maintenance : {nb_maint}[/] ({pct_maint:.1f}%)")
+            console.print("█" * int(pct_maint/5), style="red")
+            
+            rprint(f"\n[green]Disponibles    : {nb_avail}[/] ({pct_dispo:.1f}%)")
+            console.print("█" * int(pct_dispo/5), style="green")
+            console.print("\n")
+
+        # --- 2. RECHERCHE AVANCÉE ---
+        elif choice == '2':
+            console.rule("[bold yellow]RECHERCHE INTELIGENTE[/]")
+            max_p = ask_float("Budget Max par jour (€)")
+            
+            # Simulation de recherche (pour l'effet wow)
+            for _ in track(range(10), description="Analyse de la base de données..."):
+                sleep(0.05)
+
+            # Filtrage
+            results = [v for v in fleet if v.daily_rate <= max_p and v.status == VehicleStatus.AVAILABLE]
+            
+            if results:
+                # On réutilise votre super fonction d'affichage
+                list_fleet(results, f"Véhicules dispo à moins de {max_p}€")
+            else:
+                console.print(f"[red]Aucun véhicule trouvé pour ce budget.[/]")
